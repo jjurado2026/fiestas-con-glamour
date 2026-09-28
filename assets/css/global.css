@@ -282,7 +282,7 @@ svg{flex:none}
   .menu__btn{padding:0 8px;font-size:14.5px}
   .cab__marca img{width:180px}
 }
-@media (min-width:1100px) and (max-width:1279px){
+@media (min-width:1100px) and (max-width:1359px){
   .menu{gap:0}
   .menu__btn{padding:0 6px;font-size:14px}
   .menu__btn svg{display:none}
