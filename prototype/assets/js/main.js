@@ -1,18 +1,28 @@
 /* =====================================================================
-   FIESTAS CON GLAMOUR — "Photocall"
-   Todo el contenido es legible sin JavaScript: las 77 páginas de
-   servicio están en el HTML (sin JS, las siete categorías se ven
-   seguidas). Esto añade: la sesión de fotos del hero, entradas por
-   scroll, pestañas y buscador del catálogo, mega-menú y menú móvil
-   (construidos desde el catálogo: una sola fuente de datos), cabecera
-   compacta, barra fija en móvil y validación del formulario.
+   FIESTAS CON GLAMOUR — v2 "Noche de estreno"
+   Todo el contenido se lee sin JavaScript: las 77 páginas de servicio
+   están en el HTML (sin JS, las siete categorías se ven seguidas).
+   Esto añade el movimiento y las piezas interactivas:
+     · encendido del hero: focos, rótulo letra a letra y chispas
+     · tiovivo con las siete fotos de su slider (gira, se arrastra)
+     · visor: la foto pulsada vuela a primer plano con un flash
+     · invitaciones que se inclinan con el ratón y se dan la vuelta
+     · abanico de categorías, cintas de servicios y buscador
+     · foco de las ideas: sigue al cursor o recorre las 14 ideas
+     · mega-menú y menú móvil, construidos desde el catálogo
+     · cabecera compacta, presupuesto siempre a mano y formulario
 
    Parámetros para revisar y capturar:
-     ?ss              sin animaciones
-     &tab=infantiles  abre una pestaña del catálogo
-     &q=payaso        lanza una búsqueda
-     &menu=celebraciones   abre el mega-menú
-     &movil           abre el menú móvil
+     ?ss                  sin animaciones (estado final)
+     &menu=celebraciones  abre el mega-menú
+     &movil               abre el menú móvil
+     &cat=infantiles      abre una categoría del abanico
+     &q=payaso            lanza una búsqueda
+     &foto=3              trae al frente la foto 3 del tiovivo
+     &visor=3             abre en el visor la foto 3 del tiovivo
+     &verIdea=6           abre en el visor la idea 6
+     &girar=empresas      da la vuelta a una invitación
+     &idea=5              ilumina una idea
    ===================================================================== */
 (() => {
   'use strict';
@@ -25,112 +35,537 @@
   const captura  = params.has('ss');
   const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const quieto   = captura || reducido;
+  const raton    = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const io       = 'IntersectionObserver' in window;
 
   if (quieto) raiz.classList.add('quieto');
   if (captura) $$('img[loading="lazy"]').forEach(i => (i.loading = 'eager'));
 
   const reanima = (el, clase) => { el.classList.remove(clase); void el.offsetWidth; el.classList.add(clase); };
+  const esc  = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const suave = quieto ? 'auto' : 'smooth';
 
-  /* ---------- Hero: la sesión de fotos ----------
-     Las tomas se disparan alternando tiras (A1, B1, A2, B2…) cada 170 ms,
-     como un fotomatón que hace cuatro fotos seguidas. Solo cuentan las
-     tiras visibles (en móvil hay una). */
-  const tiras = $$('.tira').filter(t => t.offsetParent !== null);
-  const tomas = [];
-  const maxTomas = Math.max(0, ...tiras.map(t => $$('.toma', t).length));
-  for (let i = 0; i < maxTomas; i++) tiras.forEach(t => { const x = $$('.toma', t)[i]; if (x) tomas.push(x); });
-  tomas.forEach((t, i) => t.style.setProperty('--d', `${760 + i * 170}ms`));
-
-  if (quieto) {
-    raiz.classList.add('cargado', 'listo');
-  } else {
-    // Espera a las fuentes (máx. 700 ms) para que las líneas del titular
-    // no cambien de medida en mitad de la máscara
-    const fuentes = document.fonts ? document.fonts.ready : Promise.resolve();
-    Promise.race([fuentes, new Promise(r => setTimeout(r, 700))]).then(() => {
-      requestAnimationFrame(() => requestAnimationFrame(() => raiz.classList.add('cargado')));
-      setTimeout(() => raiz.classList.add('listo'), 760 + tomas.length * 170 + 1300);
-    });
-  }
-
-  /* ---------- Grupos: --i es la columna real ----------
-     Las rejillas entran fila a fila, de izquierda a derecha, tenga el
-     número de columnas que tenga. La pared de ideas cae en secuencia. */
-  const numerarGrupos = () => {
-    $$('[data-grupo]').forEach(g => {
-      const gtc = getComputedStyle(g).gridTemplateColumns;
-      const secuencia = g.classList.contains('muro') || !gtc || gtc === 'none';
-      const cols = secuencia ? Infinity : gtc.split(' ').filter(Boolean).length;
-      const paso = g.classList.contains('muro') ? 90 : 110;
-      [...g.children].forEach((el, i) => {
-        const n = secuencia ? i : i % cols;
-        el.style.setProperty('--i', n);
-        $$('.foto', el).forEach(f => f.style.setProperty('--d', `${n * paso + 140}ms`));
-      });
-    });
+  // fn se ejecuta la primera vez que el elemento entra en pantalla
+  const alEntrar = (el, fn, umbral = .15) => {
+    if (!el) return;
+    if (quieto || !io) { fn(el); return; }
+    const o = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { o.disconnect(); fn(el); }
+    }, { threshold: umbral, rootMargin: '0px 0px -6% 0px' });
+    o.observe(el);
   };
-  numerarGrupos();
+  // fn(true/false) cada vez que el elemento entra o sale de pantalla
+  const enPantalla = (el, fn) => {
+    if (!el) return;
+    if (!io) { fn(true); return; }
+    new IntersectionObserver(([e]) => fn(e.isIntersecting)).observe(el);
+  };
+  // Las secciones con movimiento propio lo paran fuera de pantalla
+  $$('.escena, .abanico').forEach(s => enPantalla(s, v => s.classList.toggle('fuera', !v)));
 
-  /* ---------- Entradas por scroll: una vez por elemento ---------- */
-  const entradas = $$('.entra, [data-grupo]');
-  if (quieto || !('IntersectionObserver' in window)) {
-    entradas.forEach(el => el.classList.add('visible', 'asentado'));
-  } else {
-    const obs = new IntersectionObserver((es, o) => {
-      es.forEach(e => {
-        if (!e.isIntersecting) return;
-        const el = e.target;
-        el.classList.add('visible');
-        o.unobserve(el);
-        // Terminada la entrada, se quitan los retrasos para que el hover responda
-        if (el.hasAttribute('data-grupo')) setTimeout(() => el.classList.add('asentado'), 1300 + el.children.length * 110);
-      });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: .08 });
-    entradas.forEach(el => obs.observe(el));
-  }
+  // Bloquea el scroll de la página (menú móvil, visor) sin que salte el ancho
+  const bloquear = on => {
+    const barra = innerWidth - raiz.clientWidth;
+    document.body.style.overflow = on ? 'hidden' : '';
+    document.body.style.paddingRight = on && barra > 0 ? `${barra}px` : '';
+  };
 
-  /* ---------- Cabecera compacta ---------- */
-  const cab = $('#cab');
-  const alScroll = () => cab.classList.toggle('compacta', scrollY > 24);
-  addEventListener('scroll', alScroll, { passive: true });
-  alScroll();
+  let visorAbierto = false;
 
   /* =====================================================================
-     CATÁLOGO · pestañas
-     Frecuente → cambio rápido (240 ms). Con teclado, sin animación.
+     HERO · encendido: los focos se encienden, el rótulo se ilumina letra
+     a letra como un neón, entran lema y botones y sube el tiovivo.
+     Una sola vez, al cargar.
      ===================================================================== */
-  const tabs = $$('.pestana');
-  const paneles = $$('.panel');
-  const tablist = $('.pestanas');
-
-  const activar = (tab, { foco = false, animar = true } = {}) => {
-    if (!tab) return;
-    tabs.forEach(t => {
-      const on = t === tab;
-      t.setAttribute('aria-selected', String(on));
-      t.tabIndex = on ? 0 : -1;
-    });
-    paneles.forEach(p => {
-      const on = p.id === tab.getAttribute('aria-controls');
-      p.hidden = !on;
-      if (on && animar && !quieto) reanima(p, 'entra-panel');
-    });
-    if (foco) tab.focus({ preventScroll: true });
-    // Centra la pestaña en su fila (solo scroll horizontal de la fila)
-    const x = tab.offsetLeft - (tablist.clientWidth - tab.offsetWidth) / 2;
-    tablist.scrollTo({ left: Math.max(0, x), behavior: quieto ? 'auto' : 'smooth' });
-  };
-
-  paneles.forEach((p, i) => { if (i) p.hidden = true; });
-  tabs.forEach((t, i) => {
-    t.addEventListener('click', () => activar(t));
-    t.addEventListener('keydown', e => {
-      const mapa = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 };
-      if (!(e.key in mapa)) return;
-      e.preventDefault();
-      activar(tabs[(mapa[e.key] + tabs.length) % tabs.length], { foco: true, animar: false });
+  const escena = $('.escena');
+  const rotulo = $('#rotulo');
+  let orden = 0;
+  $$('.rotulo__palabra', rotulo).forEach(p => {
+    const letras = [...p.textContent.trim()];
+    p.textContent = '';
+    letras.forEach(l => {
+      const s = document.createElement('span');
+      s.className = 'rotulo__l';
+      s.textContent = l;
+      // En orden, pero cada letra con su pequeño titubeo
+      s.style.setProperty('--d', `${(.25 + orden++ * .05 + Math.random() * .14).toFixed(2)}s`);
+      p.append(s);
     });
   });
+  rotulo.classList.add('partido');
+
+  const chispas = $('.escena__chispas');
+  if (chispas && !quieto) {
+    const cuantas = innerWidth < 700 ? 12 : 24;
+    let html = '';
+    for (let i = 0; i < cuantas; i++) {
+      const t = 9 + Math.random() * 10;
+      html += `<i class="chispa" style="left:${(Math.random() * 100).toFixed(1)}%;--s:${(1.5 + Math.random() * 2.5).toFixed(1)}px;--t:${t.toFixed(1)}s;--d:${(-Math.random() * t).toFixed(1)}s;--x:${Math.round((Math.random() - .5) * 140)}px"></i>`;
+    }
+    chispas.innerHTML = html;
+  }
+
+  const encender = () => raiz.classList.add('encendido');
+  if (quieto) encender();
+  else {
+    // Espera a las fuentes (máx. 800 ms) para que el rótulo no cambie de medida
+    const fuentes = document.fonts ? document.fonts.ready : Promise.resolve();
+    Promise.race([fuentes, new Promise(r => setTimeout(r, 800))])
+      .then(() => requestAnimationFrame(() => requestAnimationFrame(encender)));
+  }
+
+  /* =====================================================================
+     VISOR · la foto pulsada vuela desde su sitio a primer plano (FLIP,
+     solo transform) y salta un flash al aterrizar. Al cerrar vuelve a
+     su sitio. Cierran Esc, el fondo y la X; el foco vuelve a la foto.
+     ===================================================================== */
+  const visor = (() => {
+    const v = $('#visor');
+    const marcoPadre = $('.visor__marco', v);
+    const marco = $('.visor__foto', v);
+    const img = $('img', marco);
+    const pie = $('.visor__pie', v);
+    const titulo = $('.visor__t', v), texto = $('.visor__d', v);
+    const pide = $('.visor__acciones .boton', v), ver = $('.visor__ver', v);
+    const cerrarBtn = $('.visor__cerrar', v);
+    let d = null;
+
+    // La foto se dibuja a un tamaño fijo calculado aquí: así, cuando
+    // llega la versión grande, no cambia de medida
+    const medir = () => {
+      const ar = d.origen.naturalWidth / d.origen.naturalHeight || 1.6;
+      const pad = Math.min(56, Math.max(14, innerWidth * .04)) * 2;
+      // Nunca más de 1,5 veces su tamaño real: sus originales son pequeños
+      const maxW = Math.min(1100, innerWidth - pad, (d.grande ? 1600 : d.origen.naturalWidth) * 1.5);
+      const maxH = Math.min(760, innerHeight - pad - pie.offsetHeight - 20);
+      let w = maxW, h = w / ar;
+      if (h > maxH) { h = Math.max(120, maxH); w = h * ar; }
+      img.style.width = `${Math.round(w)}px`;
+      img.style.height = `${Math.round(h)}px`;
+    };
+    // Caja de la foto en reposo (sin el transform del vuelo)
+    const reposo = () => {
+      const m = marcoPadre.getBoundingClientRect();
+      return { left: m.left + marco.offsetLeft, top: m.top + marco.offsetTop, width: marco.offsetWidth, height: marco.offsetHeight };
+    };
+    const hacia = (a, b) =>
+      `translate(${(a.left - b.left).toFixed(1)}px,${(a.top - b.top).toFixed(1)}px) scale(${(a.width / b.width).toFixed(4)},${(a.height / b.height).toFixed(4)})`;
+
+    const abrir = async datos => {
+      if (visorAbierto) return;
+      visorAbierto = true;
+      d = datos;
+      img.alt = d.alt || '';
+      img.src = d.origen.currentSrc || d.origen.src;
+      titulo.textContent = d.titulo;
+      texto.textContent = d.texto || '';
+      texto.hidden = !d.texto;
+      if (d.asunto) pide.dataset.asunto = d.asunto; else delete pide.dataset.asunto;
+      ver.hidden = !d.href;
+      if (d.href) { ver.href = d.href; ver.textContent = d.ver; }
+      try { await img.decode(); } catch (e) { /* se pinta igual */ }
+      if (!visorAbierto) return;
+      v.hidden = false;
+      raiz.classList.add('visor-abierto');
+      bloquear(true);
+      medir();
+      if (!quieto) {
+        const a = d.origen.getBoundingClientRect();
+        marco.style.transition = 'none';
+        marco.style.transform = hacia(a, reposo());
+        d.oculta.style.opacity = '0';
+        void marco.offsetWidth;
+        marco.style.transition = 'transform .72s cubic-bezier(.2,1.1,.3,1)';
+        marco.style.transform = '';
+        const aterriza = e => {
+          if (e.target !== marco) return;
+          marco.removeEventListener('transitionend', aterriza);
+          if (visorAbierto) reanima(v, 'aterriza');
+        };
+        marco.addEventListener('transitionend', aterriza);
+      }
+      v.classList.add('abierto');
+      cerrarBtn.focus({ preventScroll: true });
+      // La versión grande de la misma foto, cuando llegue
+      if (d.grande && !img.src.endsWith(d.grande)) {
+        const g = new Image();
+        g.src = d.grande;
+        const esta = d;
+        g.decode().then(() => { if (visorAbierto && d === esta) img.src = g.src; }).catch(() => {});
+      }
+    };
+
+    const cerrar = ({ inmediato = false, foco = true } = {}) => {
+      if (!visorAbierto) return;
+      visorAbierto = false;
+      v.classList.remove('abierto', 'aterriza');
+      const datos = d;
+      let hecho = false;
+      const fin = () => {
+        if (hecho) return;
+        hecho = true;
+        v.hidden = true;
+        raiz.classList.remove('visor-abierto');
+        marco.style.transition = '';
+        marco.style.transform = '';
+        datos.oculta.style.opacity = '';
+        bloquear(false);
+        if (foco) datos.boton.focus({ preventScroll: true });
+        tiovivo.reanudar();
+      };
+      if (quieto || inmediato || !datos.origen.isConnected) { fin(); return; }
+      marco.style.transition = 'transform .5s cubic-bezier(.5,0,.15,1)';
+      marco.style.transform = hacia(datos.origen.getBoundingClientRect(), reposo());
+      marco.addEventListener('transitionend', fin, { once: true });
+      setTimeout(fin, 650);
+    };
+
+    cerrarBtn.addEventListener('click', () => cerrar());
+    $('.visor__fondo', v).addEventListener('click', () => cerrar());
+    // Un enlace del visor lleva a otra parte: se cierra sin volver
+    v.addEventListener('click', e => { if (e.target.closest('a')) cerrar({ inmediato: true, foco: false }); });
+    v.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { e.preventDefault(); cerrar(); return; }
+      if (e.key !== 'Tab') return;
+      const f = $$('a, button', v).filter(x => !x.hidden && x.offsetParent !== null);
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    });
+    addEventListener('resize', () => { if (visorAbierto) medir(); });
+
+    return { abrir, cerrar };
+  })();
+
+  // La candidata más grande de un srcset
+  const masGrande = img => {
+    if (!img.srcset) return img.src;
+    return img.srcset.split(',').map(s => s.trim().split(/\s+/))
+      .sort((a, b) => parseInt(b[1], 10) - parseInt(a[1], 10))[0][0];
+  };
+
+  /* =====================================================================
+     TIOVIVO · las siete fotos de su slider en un aro 3D.
+     Gira solo y despacio (una vuelta cada 48 s) y se para con el cursor
+     encima o con el foco dentro. Se arrastra con el dedo o el ratón y
+     las flechas pasan de una en una. La de delante se abre en el visor;
+     las de los lados, al pulsarlas, vienen al frente.
+     ===================================================================== */
+  const tiovivo = (() => {
+    const grupo = $('.tiovivo');
+    const caja = $('.tiovivo__escena', grupo);
+    const aro = $('.tiovivo__aro', grupo);
+    const fotos = $$('.tiovivo__foto', aro);
+    const actual = $('.tiovivo__actual', grupo);
+    const nombres = fotos.map(f => $('.tiovivo__nombre', f).textContent.trim());
+    const N = fotos.length, PASO = 360 / N, VEL = -7.5;
+
+    let R = 0, ang = 0, vel = 0, meta = null, frente = -1, pintado = '';
+    let encima = false, foco = false, pausaHasta = 0, visible = true, raf = 0, antes = 0;
+    let arr = null, arrastrado = false;
+
+    $$('img', aro).forEach(i => (i.draggable = false));
+
+    const pintar = () => {
+      const t = `translateZ(${(-R).toFixed(1)}px) rotateY(${ang.toFixed(2)}deg)`;
+      if (t !== pintado) { aro.style.transform = t; pintado = t; }
+      const i = ((Math.round(-ang / PASO) % N) + N) % N;
+      if (i === frente) return;
+      frente = i;
+      fotos.forEach((f, k) => f.classList.toggle('delante', k === i));
+      actual.textContent = nombres[i];
+    };
+    const medir = () => {
+      R = aro.offsetWidth * 1.2;
+      fotos.forEach((f, i) => (f.style.transform = `rotateY(${(i * PASO).toFixed(2)}deg) translateZ(${R.toFixed(1)}px)`));
+      pintado = '';
+      pintar();
+    };
+
+    const activo = () => visible && !document.hidden && !visorAbierto;
+    const parado = () => quieto || encima || foco || performance.now() < pausaHasta;
+
+    const fotograma = t => {
+      raf = 0;
+      const dt = Math.min(.05, Math.max(0, (t - antes) / 1000));
+      antes = t;
+      if (arr && arrastrado) {
+        // el ángulo lo pone el puntero
+      } else if (meta !== null) {
+        // Muelle con un punto de rebote
+        vel += (95 * (meta - ang) - 17 * vel) * dt;
+        ang += vel * dt;
+        if (Math.abs(meta - ang) < .03 && Math.abs(vel) < .4) { ang = meta; vel = 0; meta = null; }
+      } else {
+        vel += ((parado() ? 0 : VEL) - vel) * (1 - Math.exp(-dt * 2.4));
+        ang += vel * dt;
+      }
+      pintar();
+      const sigue = !quieto || arrastrado || meta !== null || Math.abs(vel) > .02;
+      if (sigue && activo()) raf = requestAnimationFrame(fotograma);
+    };
+    const arrancar = () => {
+      if (raf || !activo()) return;
+      antes = performance.now();
+      raf = requestAnimationFrame(fotograma);
+    };
+
+    // Lleva la foto i al frente por el camino más corto
+    const ir = (i, pausa = 5000) => {
+      const destino = -i * PASO;
+      const objetivo = destino + Math.round((ang - destino) / 360) * 360;
+      pausaHasta = performance.now() + pausa;
+      if (quieto) { ang = objetivo; vel = 0; meta = null; pintar(); return; }
+      meta = objetivo;
+      arrancar();
+    };
+    const base = () => Math.round(-(meta !== null ? meta : ang) / PASO);
+    // El rótulo de la foto solo se anuncia cuando la cambia el usuario
+    let tAnuncio;
+    const anunciar = () => {
+      actual.setAttribute('aria-live', 'polite');
+      clearTimeout(tAnuncio);
+      tAnuncio = setTimeout(() => actual.setAttribute('aria-live', 'off'), 1600);
+    };
+    actual.setAttribute('aria-live', 'off');
+
+    const abrirFoto = i => {
+      const f = fotos[i], img = $('img', f);
+      visor.abrir({
+        origen: img, oculta: f, boton: f, alt: img.alt, grande: masGrande(img),
+        titulo: nombres[i], texto: f.dataset.texto, asunto: f.dataset.asunto,
+        href: f.dataset.href, ver: f.dataset.ver
+      });
+    };
+
+    $$('.tiovivo__paso', grupo).forEach(b => b.addEventListener('click', () => {
+      anunciar();
+      ir(base() + Number(b.dataset.paso));
+    }));
+    fotos.forEach((f, i) => f.addEventListener('click', () => {
+      if (i === frente) abrirFoto(i);
+      else { anunciar(); ir(i, 6000); }
+    }));
+
+    // Arrastre: hasta 7 px es un clic; a partir de ahí, mueve el aro
+    caja.addEventListener('pointerdown', e => {
+      if (e.button) return;
+      arrastrado = false;
+      arr = { x0: e.clientX, a0: ang, x: e.clientX, t: e.timeStamp, v: 0, id: e.pointerId };
+    });
+    caja.addEventListener('pointermove', e => {
+      if (!arr || e.pointerId !== arr.id) return;
+      const dx = e.clientX - arr.x0;
+      if (!arrastrado) {
+        if (Math.abs(dx) < 7) return;
+        arrastrado = true;
+        meta = null;
+        arr.a0 = ang;
+        arr.x0 = e.clientX;
+        caja.setPointerCapture(e.pointerId);
+        caja.classList.add('arrastrando');
+        arrancar();
+        return;
+      }
+      const k = 64 / aro.offsetWidth;                     // grados por píxel
+      ang = arr.a0 + dx * k;
+      const dt = (e.timeStamp - arr.t) / 1000;
+      if (dt > .001) arr.v = .75 * ((e.clientX - arr.x) * k / dt) + .25 * arr.v;
+      arr.x = e.clientX;
+      arr.t = e.timeStamp;
+      if (quieto) pintar();
+    });
+    const soltar = e => {
+      if (!arr || e.pointerId !== arr.id) return;
+      const v = arr.v;
+      arr = null;
+      if (!arrastrado) return;
+      caja.classList.remove('arrastrando');
+      // Inercia: hasta dónde llegaría sola, y de ahí a la foto más cercana
+      const lanzado = Math.max(-260, Math.min(260, v));
+      anunciar();
+      ir(Math.round(-(ang + lanzado * .3) / PASO), 6000);
+      if (!quieto) vel = lanzado;
+    };
+    caja.addEventListener('pointerup', soltar);
+    caja.addEventListener('pointercancel', soltar);
+    caja.addEventListener('lostpointercapture', soltar);
+    // Un arrastre no es un clic
+    caja.addEventListener('click', e => {
+      if (!arrastrado) return;
+      e.preventDefault();
+      e.stopPropagation();
+      arrastrado = false;
+    }, true);
+
+    caja.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') encima = true; });
+    caja.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') encima = false; });
+    grupo.addEventListener('focusin', e => {
+      if (!e.target.matches(':focus-visible')) return;
+      foco = true;
+      const f = e.target.closest('.tiovivo__foto');
+      if (f) ir(fotos.indexOf(f), 0);
+    });
+    grupo.addEventListener('focusout', e => { if (!grupo.contains(e.relatedTarget)) foco = false; });
+    grupo.addEventListener('keydown', e => {
+      const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (!d) return;
+      e.preventDefault();
+      anunciar();
+      const f = e.target.closest('.tiovivo__foto');
+      if (f) fotos[(((fotos.indexOf(f) + d) % N) + N) % N].focus();
+      else ir(base() + d);
+    });
+
+    enPantalla(escena, v => { visible = v; arrancar(); });
+    document.addEventListener('visibilitychange', arrancar);
+    if ('ResizeObserver' in window) new ResizeObserver(medir).observe(aro);
+    else addEventListener('resize', medir);
+    medir();
+    arrancar();
+
+    return { ir, abrirFoto, reanudar: arrancar };
+  })();
+
+  /* =====================================================================
+     INVITACIONES · se reparten sobre la mesa al llegar, se inclinan
+     con el ratón (con un brillo que sigue al cursor) y se dan la vuelta
+     para ver qué incluyen. La cara oculta queda inerte.
+     ===================================================================== */
+  const mesa = $('.mesa');
+  const invitaciones = $$('.invitacion');
+  let pendienteInv = null;
+
+  const girar = (inv, vuelta, { foco = false } = {}) => {
+    inv.classList.toggle('vuelta', vuelta);
+    const frente = $('.invitacion__cara--frente', inv), dorso = $('.invitacion__cara--dorso', inv);
+    frente.inert = vuelta;
+    dorso.inert = !vuelta;
+    $('.invitacion__girar', frente).setAttribute('aria-expanded', String(vuelta));
+    if (foco) (vuelta ? $('a', dorso) : $('.invitacion__girar', frente)).focus({ preventScroll: true });
+  };
+
+  invitaciones.forEach(inv => {
+    girar(inv, false);
+    inv.addEventListener('click', e => {
+      if (e.target.closest('.invitacion__girar')) girar(inv, !inv.classList.contains('vuelta'), { foco: true });
+    });
+    if (!raton || quieto) return;
+    const inclina = $('.invitacion__inclina', inv);
+    const brillo = $('.invitacion__brillo', inv);
+    inv.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse' || !mesa.classList.contains('asentada')) return;
+      const r = inv.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      inclina.style.transform = `rotateX(${(-y * 9).toFixed(2)}deg) rotateY(${(x * 11).toFixed(2)}deg)`;
+      brillo.style.setProperty('--gx', `${Math.round(e.clientX - r.left)}px`);
+      brillo.style.setProperty('--gy', `${Math.round(e.clientY - r.top)}px`);
+      inv.classList.add('inclinada');
+    });
+    inv.addEventListener('pointerleave', () => {
+      inclina.style.transform = '';
+      inv.classList.remove('inclinada');
+    });
+  });
+
+  alEntrar(mesa, () => {
+    mesa.classList.add('repartida');
+    // Terminado el reparto, fuera los retrasos para que todo responda al momento
+    setTimeout(() => {
+      mesa.classList.add('asentada');
+      if (pendienteInv) { pendienteInv(); pendienteInv = null; }
+    }, quieto ? 0 : 1450);
+  }, .2);
+
+  // "Eventos de empresa", "Fiestas infantiles"…: lleva a su invitación y la abre
+  const abrirInvitacion = publico => {
+    const inv = $(`.invitacion[data-publico="${publico}"]`);
+    if (!inv) return;
+    const hacer = () => {
+      invitaciones.forEach(x => { if (x !== inv && x.classList.contains('vuelta')) girar(x, false); });
+      // En móvil la mesa es una fila deslizable: centra la invitación
+      if (mesa.scrollWidth > mesa.clientWidth) {
+        const m = mesa.getBoundingClientRect(), r = inv.getBoundingClientRect();
+        mesa.scrollTo({ left: mesa.scrollLeft + r.left - m.left - (m.width - r.width) / 2, behavior: suave });
+      }
+      girar(inv, true, { foco: true });
+      inv.classList.add('destacada');
+      setTimeout(() => inv.classList.remove('destacada'), 1800);
+    };
+    if (mesa.classList.contains('asentada')) setTimeout(hacer, quieto ? 0 : 500);
+    else pendienteInv = hacer;
+  };
+  $$('[data-abre]').forEach(a => a.addEventListener('click', () => abrirInvitacion(a.dataset.abre)));
+
+  /* =====================================================================
+     ABANICO · siete varillas. Ninguna está marcada de inicio: el cursor
+     colorea la que tiene encima y al pulsarla se abre su panel justo
+     debajo. Debajo, dos cintas lentas con los 77 servicios.
+     ===================================================================== */
+  const abanico = $('.abanico');
+  const mano = $('.abanico__mano');
+  const varillas = $$('.varilla');
+  const paneles = $$('.cat-panel');
+  const cajaPaneles = $('.cat-paneles');
+  const cintas = $('.cintas');
+
+  const datosCat = id => {
+    const p = $(`#cat-${id}`);
+    if (!p) return null;
+    const ver = $('.cat-panel__ver', p);
+    return {
+      id, p,
+      nombre: $('.cat-panel__t', p).textContent.trim(),
+      lema: $('.cat-panel__lema', p).textContent.trim(),
+      url: ver.href,
+      ver: ver.textContent.trim(),
+      enlaces: $$('.servicios a', p)
+    };
+  };
+
+  paneles.forEach(p => { p.hidden = true; p.tabIndex = -1; });
+
+  const abrirCat = (id, { desplazar = true, foco = false } = {}) => {
+    let abierto = null;
+    paneles.forEach(p => {
+      const on = p.dataset.cat === id;
+      if (on && p.hidden && !quieto) reanima(p, 'abre');
+      p.hidden = !on;
+      if (on) abierto = p;
+    });
+    varillas.forEach(v => v.setAttribute('aria-expanded', String(v.dataset.cat === id)));
+    abanico.classList.toggle('elegido', !!abierto);
+    if (!abierto) return;
+    if (foco) abierto.focus({ preventScroll: true });
+    if (desplazar) {
+      // Si el panel queda por debajo, se sube hasta tenerlo a la vista
+      const r = abierto.getBoundingClientRect();
+      if (r.top > innerHeight * .62) scrollBy({ top: r.top - innerHeight * .32, behavior: suave });
+    }
+  };
+
+  varillas.forEach(v => v.addEventListener('click', () => {
+    abrirCat(v.getAttribute('aria-expanded') === 'true' ? null : v.dataset.cat);
+  }));
+  $$('.cat-panel__cerrar').forEach(b => b.addEventListener('click', () => {
+    const id = b.closest('.cat-panel').dataset.cat;
+    abrirCat(null);
+    $(`.varilla[data-cat="${id}"]`).focus({ preventScroll: true });
+  }));
+
+  // Cintas: los servicios alternos de todo el catálogo, cada fila hacia
+  // un lado. Cada cinta lleva su contenido dos veces para el bucle.
+  const todos = paneles.flatMap(p => $$('.servicios a', p));
+  const pistas = $$('.cinta__pista', cintas);
+  [todos.filter((_, i) => i % 2 === 0), todos.filter((_, i) => i % 2 === 1)].forEach((grupo, k) => {
+    const una = grupo.map(a => `<a class="pastilla" href="${a.href}" tabindex="-1">${esc(a.textContent.trim())}</a>`).join('');
+    pistas[k].innerHTML = una + una;
+  });
+  // La misma calma en las dos: unos 34 px por segundo
+  const ritmoCintas = () => pistas.forEach(p => p.style.setProperty('--dur', `${(p.scrollWidth / 2 / 34).toFixed(1)}s`));
+  ritmoCintas();
+  if (document.fonts) document.fonts.ready.then(ritmoCintas);
 
   /* ---------- Buscador ----------
      Sin tildes ni mayúsculas: "comunion" encuentra "Organización de
@@ -141,37 +576,16 @@
   const lista = $('.resultados__lista', resultados);
   const vacio = $('.resultados__vacio', resultados);
   const cuenta = $('.resultados__n', resultados);
-  const cajaPaneles = $('.carta__paneles');
-
-  const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
-  const datosCat = id => {
-    const p = $(`#cat-${id}`);
-    if (!p) return null;
-    const ver = $('.panel__cuerpo > .enlace', p);
-    return {
-      id,
-      nombre: $('.panel__t', p).textContent.trim(),
-      lema: $('.panel__lema', p).textContent.trim(),
-      url: ver.href,
-      ver: ver.textContent.trim(),
-      enlaces: $$('.servicios a', p)
-    };
-  };
 
   const indice = paneles.map(p => {
-    const d = datosCat(p.dataset.cat);
-    return {
-      ...d,
-      items: d.enlaces.map(a => ({ a, texto: a.textContent.trim(), clave: norm(`${a.textContent} ${a.dataset.k || ''}`) }))
-    };
+    const c = datosCat(p.dataset.cat);
+    return { ...c, items: c.enlaces.map(a => ({ a, texto: a.textContent.trim(), clave: norm(`${a.textContent} ${a.dataset.k || ''}`) })) };
   });
   const total = indice.reduce((n, c) => n + c.items.length, 0);
   $$('[data-total]').forEach(el => (el.textContent = total));
 
-  // Resalta cada término dentro del rótulo visible (las posiciones coinciden:
-  // quitar tildes con NFD no cambia la longitud de un texto en NFC)
+  // Resalta cada término dentro del rótulo visible (quitar tildes con NFD
+  // no cambia la longitud de un texto en NFC: las posiciones coinciden)
   const marcar = (texto, terminos) => {
     const n = norm(texto);
     const marcas = new Array(texto.length).fill(false);
@@ -192,13 +606,10 @@
     const bruto = campo.value.trim();
     const q = norm(bruto);
     borrar.hidden = !bruto;
-    if (q.length < 2) {
-      resultados.hidden = true;
-      tablist.hidden = false;
-      cajaPaneles.hidden = false;
-      cuenta.textContent = '';
-      return;
-    }
+    const buscando = q.length >= 2;
+    mano.hidden = cajaPaneles.hidden = cintas.hidden = buscando;
+    resultados.hidden = !buscando;
+    if (!buscando) { cuenta.textContent = ''; return; }
     const terminos = q.split(/\s+/).filter(Boolean);
     let n = 0;
     lista.textContent = '';
@@ -223,15 +634,11 @@
       g.append(ul);
       lista.append(g);
     });
-    resultados.hidden = false;
-    tablist.hidden = true;
-    cajaPaneles.hidden = true;
     vacio.hidden = n > 0;
     cuenta.textContent = n
       ? `${n} ${n === 1 ? 'servicio' : 'servicios'} para «${bruto}»`
       : `Ningún servicio para «${bruto}»`;
   };
-
   const limpiarBusqueda = () => { if (campo.value) { campo.value = ''; buscar(); } };
 
   campo.addEventListener('input', buscar);
@@ -241,37 +648,168 @@
     const b = e.target.closest('[data-ver]');
     if (!b) return;
     limpiarBusqueda();
-    activar($(`#tab-${b.dataset.ver}`), { foco: true });
+    abrirCat(b.dataset.ver, { foco: true });
   });
   // "Cuéntanos qué buscas": la búsqueda viaja al mensaje del formulario
-  $('[data-pide]')?.addEventListener('click', () => {
+  $('[data-pide]').addEventListener('click', () => {
     const m = $('#f-mensaje');
-    if (m && campo.value.trim() && !m.value) m.value = `Busco: ${campo.value.trim()}. `;
+    if (campo.value.trim() && !m.value) m.value = `Busco: ${campo.value.trim()}. `;
   });
 
-  // Enlaces que abren una pestaña concreta (pie, "Organizamos")
-  $$('[data-tab]').forEach(a => a.addEventListener('click', () => {
+  // Enlaces del pie que abren una categoría concreta
+  $$('[data-cat-abre]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
     limpiarBusqueda();
-    activar($(`#tab-${a.dataset.tab}`), { animar: false });
+    abrirCat(a.dataset.catAbre, { desplazar: false, foco: true });
+    $(`#cat-${a.dataset.catAbre}`).scrollIntoView({ behavior: suave, block: 'start' });
   }));
 
   /* =====================================================================
-     MEGA-MENÚ · construido desde el catálogo
-     Ratón: se abre con 120 ms de intención y se cierra al salir de la
-     cabecera. Clic y teclado: alternan. Esc cierra y devuelve el foco.
+     IDEAS · escenario a oscuras con un foco. Con ratón, la luz sigue al
+     cursor e ilumina la idea más cercana; si nadie la mueve, recorre las
+     14 ideas sola. La lista y las fotos abren la idea en el visor.
      ===================================================================== */
+  const ideas = (() => {
+    const seccion = $('#ideas');
+    const pared = $('#pared');
+    const luz = $('.pared__luz', pared);
+    const fotos = $$('.pared__foto', pared);
+    const botones = $$('.programa__lista button');
+    const listaIdeas = $('.programa__lista');
+    const activo = $('.programa__activo');
+    const tIdea = $('#idea-t'), dIdea = $('#idea-d');
+    const URL_IDEAS = 'http://www.fiestasconglamour.com/servicios-bodas-eventos-fiestas-madrid/ideas-originales/';
+    let W = 0, H = 0, centros = [];
+    let cx = 0, cy = 0, tx = 0, ty = 0, raf = 0, actual = -1;
+    let conCursor = false, enLista = false, visible = false, gira = 0, colocada = false;
+
+    const medir = () => {
+      const p = pared.getBoundingClientRect();
+      W = p.width; H = p.height;
+      centros = fotos.map(f => {
+        const r = f.getBoundingClientRect();
+        return { x: r.left - p.left + r.width / 2, y: r.top - p.top + r.height / 2 };
+      });
+    };
+    const pintarLuz = () => { luz.style.transform = `translate3d(${(cx - W / 2).toFixed(1)}px,${(cy - H / 2).toFixed(1)}px,0)`; };
+    const bucle = () => {
+      raf = 0;
+      cx += (tx - cx) * .11;
+      cy += (ty - cy) * .11;
+      pintarLuz();
+      if (Math.abs(tx - cx) > .4 || Math.abs(ty - cy) > .4) raf = requestAnimationFrame(bucle);
+    };
+    const mover = (x, y, inmediato = false) => {
+      tx = x; ty = y;
+      if (inmediato || quieto) { cx = x; cy = y; pintarLuz(); return; }
+      if (!raf) raf = requestAnimationFrame(bucle);
+    };
+
+    const elegir = i => {
+      if (i === actual) return;
+      actual = i;
+      fotos.forEach((f, k) => f.classList.toggle('iluminada', k === i));
+      botones.forEach((b, k) => b.classList.toggle('activa', k === i));
+      tIdea.textContent = botones[i].textContent;
+      dIdea.textContent = fotos[i].dataset.d;
+      if (!quieto) reanima(activo, 'cambia');
+      // En móvil la lista es una fila deslizable: el botón activo, a la vista
+      if (listaIdeas.scrollWidth > listaIdeas.clientWidth + 2 && !enLista) {
+        const l = listaIdeas.getBoundingClientRect(), r = botones[i].getBoundingClientRect();
+        listaIdeas.scrollTo({ left: listaIdeas.scrollLeft + r.left - l.left - (l.width - r.width) / 2, behavior: suave });
+      }
+    };
+    const irA = (i, inmediato = false) => {
+      elegir(i);
+      if (!centros.length) medir();
+      mover(centros[i].x, centros[i].y, inmediato);
+    };
+    const cercana = (x, y) => {
+      let mejor = 0, dist = Infinity;
+      centros.forEach((c, i) => { const d = (c.x - x) ** 2 + (c.y - y) ** 2; if (d < dist) { dist = d; mejor = i; } });
+      return mejor;
+    };
+
+    // Recorrido solo: una idea cada 2,8 s mientras nadie mueva la luz
+    const recorrer = () => {
+      clearInterval(gira);
+      if (quieto) return;
+      gira = setInterval(() => {
+        if (!conCursor && !enLista && visible && !visorAbierto && !document.hidden) irA((actual + 1) % fotos.length);
+      }, 2800);
+    };
+
+    if (raton && !quieto) {
+      pared.addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse') return;
+        conCursor = true;
+        const r = pared.getBoundingClientRect();
+        mover(e.clientX - r.left, e.clientY - r.top);
+        elegir(cercana(tx, ty));
+      });
+      pared.addEventListener('pointerleave', e => {
+        if (e.pointerType !== 'mouse') return;
+        conCursor = false;
+        if (actual > -1) mover(centros[actual].x, centros[actual].y);
+        recorrer();
+      });
+    }
+
+    const abrirIdea = (i, boton) => {
+      const f = fotos[i], img = $('img', f), b = $('.pared__btn', f);
+      irA(i, true);
+      visor.abrir({
+        origen: img, oculta: b, boton: boton || b, alt: img.alt,
+        titulo: botones[i].textContent, texto: f.dataset.d,
+        asunto: 'Bienvenida original', href: URL_IDEAS, ver: 'Ver todas las ideas'
+      });
+    };
+
+    botones.forEach((b, i) => {
+      b.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { enLista = true; irA(i); } });
+      b.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { enLista = false; recorrer(); } });
+      b.addEventListener('focus', () => { if (b.matches(':focus-visible')) { enLista = true; irA(i); } });
+      b.addEventListener('blur', () => { enLista = false; });
+      b.addEventListener('click', () => abrirIdea(i, b));
+    });
+    fotos.forEach((f, i) => $('.pared__btn', f).addEventListener('click', () => abrirIdea(i)));
+
+    const recolocar = () => { medir(); if (actual > -1) mover(centros[actual].x, centros[actual].y, true); };
+    if ('ResizeObserver' in window) new ResizeObserver(recolocar).observe(pared);
+    else addEventListener('resize', recolocar);
+
+    enPantalla(seccion, v => {
+      visible = v;
+      if (v && !colocada) { colocada = true; medir(); irA(actual > -1 ? actual : 0, true); recorrer(); }
+    });
+    if (quieto) { medir(); irA(0, true); }
+
+    return { irA, abrirIdea };
+  })();
+
+  /* ---------- Promociones: las tiras entran y se estampa el sello ---------- */
+  alEntrar($('.carretes'), el => el.classList.add('visible'), .12);
+
+  /* =====================================================================
+     CABECERA · compacta al bajar. Mega-menú construido desde el
+     catálogo: con ratón se abre con 120 ms de intención y se cierra al
+     salir de la cabecera; con clic y teclado alterna. Esc cierra y
+     devuelve el foco.
+     ===================================================================== */
+  const cab = $('#cab');
+  const alScroll = () => cab.classList.toggle('compacta', scrollY > 24);
+  addEventListener('scroll', alScroll, { passive: true });
+  alScroll();
+
   const mega = $('#mega');
   const botones = $$('.menu__btn');
   let abierto = null, porHover = false, tAbre, tCierra;
-
-  const flecha = '<svg aria-hidden="true"><use href="#i-flecha"/></svg>';
   const clonar = a => { const c = a.cloneNode(true); c.removeAttribute('data-k'); return c; };
 
   const pintarMega = btn => {
-    const ids = btn.dataset.cats.split(' ');
-    const cats = ids.map(datosCat);
+    const cats = btn.dataset.cats.split(' ').map(datosCat);
     const [p] = cats;
-    mega.innerHTML = `<div class="mega__env"><div class="mega__lado"><p class="mega__t">${esc(p.nombre)}</p><p class="mega__lema">${esc(p.lema)}</p><a class="enlace" href="${p.url}">${esc(p.ver)}${flecha}</a></div><div class="mega__grupos"></div></div>`;
+    mega.innerHTML = `<div class="mega__env"><div class="mega__lado"><p class="mega__t">${esc(p.nombre)}</p><p class="mega__lema">${esc(p.lema)}</p><a class="enlace" href="${p.url}">${esc(p.ver)}</a></div><div class="mega__grupos"></div></div>`;
     const grupos = $('.mega__grupos', mega);
     cats.forEach(c => {
       const g = document.createElement('div');
@@ -283,7 +821,6 @@
       grupos.append(g);
     });
   };
-
   const abrirMega = (btn, { hover = false, animar = true } = {}) => {
     clearTimeout(tCierra);
     if (abierto === btn) return;
@@ -297,7 +834,6 @@
     abierto = btn;
     porHover = hover;
   };
-
   const cerrarMega = (devolverFoco = false) => {
     if (!abierto) return;
     const b = abierto;
@@ -331,9 +867,7 @@
   mega.addEventListener('click', e => { if (e.target.closest('a')) cerrarMega(); });
   document.addEventListener('click', e => { if (abierto && !cab.contains(e.target)) cerrarMega(); });
 
-  /* =====================================================================
-     MENÚ MÓVIL · acordeón por categoría, del mismo catálogo
-     ===================================================================== */
+  /* ---------- Menú móvil: acordeón por categoría, del mismo catálogo ---------- */
   const movil = $('#movil');
   const abrirBtn = $('.cab__abrir');
   const navMovil = $('.movil__nav', movil);
@@ -363,7 +897,7 @@
     $('.vo', abrirBtn).textContent = 'Cerrar menú';
     $('use', abrirBtn).setAttribute('href', '#i-cerrar');
     cab.classList.add('abierta');
-    document.body.style.overflow = 'hidden';
+    bloquear(true);
   };
   const cerrarMovil = (devolverFoco = false) => {
     if (movil.hidden) return;
@@ -372,7 +906,7 @@
     $('.vo', abrirBtn).textContent = 'Abrir menú';
     $('use', abrirBtn).setAttribute('href', '#i-menu');
     cab.classList.remove('abierta');
-    document.body.style.overflow = '';
+    bloquear(false);
     if (devolverFoco) abrirBtn.focus();
   };
 
@@ -390,32 +924,37 @@
   matchMedia('(min-width: 1100px)').addEventListener('change', e => (e.matches ? cerrarMovil() : cerrarMega()));
 
   document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape') return;
+    if (e.key !== 'Escape' || visorAbierto) return;
     if (abierto) cerrarMega(true);
     cerrarMovil(true);
   });
 
-  /* ---------- Barra fija en móvil ----------
-     Aparece cuando el hero sale de pantalla; se retira en el contacto. */
-  const fija = $('.fija');
-  if (fija && 'IntersectionObserver' in window) {
-    let fueraHero = false, enContacto = false;
-    const pinta = () => {
-      const v = fueraHero && !enContacto;
-      fija.classList.toggle('visible', v);
-      fija.setAttribute('aria-hidden', String(!v));
-      $$('a', fija).forEach(a => (a.tabIndex = v ? 0 : -1));
-    };
-    new IntersectionObserver(([e]) => { fueraHero = !e.isIntersecting; pinta(); }).observe($('.hero'));
-    new IntersectionObserver(([e]) => { enContacto = e.isIntersecting; pinta(); }, { threshold: .12 }).observe($('#contacto'));
+  /* ---------- Presupuesto siempre a mano ----------
+     Botón flotante (escritorio) y barra fija (móvil): aparecen al dejar
+     atrás el hero y se retiran al llegar al contacto. */
+  const flotante = $('.flotante'), fija = $('.fija');
+  let fueraHero = false, enContacto = false;
+  const pintaCtas = () => {
+    const v = fueraHero && !enContacto;
+    [flotante, fija].forEach(el => { el.classList.toggle('visible', v); el.setAttribute('aria-hidden', String(!v)); });
+    flotante.tabIndex = v ? 0 : -1;
+    $$('a', fija).forEach(a => (a.tabIndex = v ? 0 : -1));
+  };
+  if (io) {
+    enPantalla(escena, v => { fueraHero = !v; pintaCtas(); });
+    new IntersectionObserver(([e]) => { enContacto = e.isIntersecting; pintaCtas(); }, { threshold: .12 }).observe($('#contacto'));
   }
 
   /* =====================================================================
-     FORMULARIO · validación en línea, sin castigar mientras se escribe
+     FORMULARIO · validación en línea, sin castigar mientras se escribe.
+     Cualquier "Pide presupuesto" con data-asunto deja elegido el asunto.
      ===================================================================== */
   const form = $('#formulario');
   const asunto = $('#f-asunto');
-  $$('[data-asunto]').forEach(a => a.addEventListener('click', () => { asunto.value = a.dataset.asunto; }));
+  document.addEventListener('click', e => {
+    const a = e.target.closest('[data-asunto]');
+    if (a && a.dataset.asunto) asunto.value = a.dataset.asunto;
+  });
 
   const reglas = {
     'f-nombre': el => el.value.trim().length > 1,
@@ -450,11 +989,23 @@
   });
 
   /* ---------- Estados por parámetro (revisión y capturas) ---------- */
-  if (params.get('tab')) activar($(`#tab-${params.get('tab')}`), { animar: false });
-  if (params.get('q')) { campo.value = params.get('q'); buscar(); }
   if (params.get('menu')) {
     const b = botones.find(x => x.dataset.cats.split(' ')[0] === params.get('menu'));
     if (b) abrirMega(b, { animar: false });
   }
   if (params.has('movil')) abrirMovil();
+  if (params.get('cat')) abrirCat(params.get('cat'), { desplazar: false });
+  if (params.get('q')) { campo.value = params.get('q'); buscar(); }
+  if (params.get('girar')) {
+    const inv = $(`.invitacion[data-publico="${params.get('girar')}"]`);
+    if (inv) girar(inv, true);
+  }
+  if (params.get('idea')) ideas.irA(Number(params.get('idea')), true);
+  if (params.get('foto')) tiovivo.ir(Number(params.get('foto')), 600000);
+  if (params.get('visor')) {
+    const i = Number(params.get('visor'));
+    tiovivo.ir(i, 600000);
+    setTimeout(() => tiovivo.abrirFoto(i), quieto ? 0 : 900);
+  }
+  if (params.get('verIdea')) ideas.abrirIdea(Number(params.get('verIdea')));
 })();
