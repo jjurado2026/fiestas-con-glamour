@@ -242,7 +242,7 @@ svg{flex:none}
 /* =====================================================================
    VISOR · la foto pulsada vuela desde donde estaba (FLIP, solo transform)
    ===================================================================== */
-.visor{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:clamp(14px,4vw,56px)}
+.visor{--foco:var(--hielo);position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:clamp(14px,4vw,56px)}
 .visor__fondo{position:absolute;inset:0;background:rgba(7,20,26,.9);opacity:0;transition:opacity .35s linear}
 .visor.abierto .visor__fondo{opacity:1}
 .visor__marco{position:relative;display:grid;justify-items:center;gap:20px;width:min(1100px,100%)}
@@ -256,7 +256,9 @@ svg{flex:none}
 .visor__t{font-family:var(--display);font-size:clamp(26px,2vw + 14px,40px);color:var(--brillo)}
 .visor__d{font-size:clamp(16px,.4vw + 14.5px,19px);line-height:1.55}
 .visor__acciones{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px 22px;margin-top:6px}
-.visor__cerrar{position:absolute;top:clamp(10px,2vw,22px);right:clamp(10px,2vw,22px);display:grid;place-items:center;width:52px;height:52px;border:0;border-radius:50%;background:rgba(194,220,224,.14);color:var(--brillo);--foco:var(--hielo);opacity:0;transition:opacity .3s linear .2s}
+.visor__cerrar{position:absolute;top:clamp(10px,2vw,22px);right:clamp(10px,2vw,22px);display:grid;place-items:center;width:52px;height:52px;border:0;border-radius:50%;background:rgba(194,220,224,.14);color:var(--brillo);--foco:var(--hielo);opacity:0;transition:opacity .3s linear .2s,transform .2s var(--muelle)}
+@media (hover:hover){.visor__cerrar:hover{transform:scale(1.08)}}
+.visor__cerrar:active{transform:scale(.94)}
 .visor.abierto .visor__cerrar{opacity:1}
 .visor__cerrar svg{width:24px;height:24px}
 @media (max-height:520px){.visor__foto img{max-height:56vh}.visor__d{display:none}}
@@ -283,7 +285,7 @@ svg{flex:none}
              0 0 70px rgba(194,220,224,.32),0 34px 70px -34px rgba(0,0,0,.85);
   transition:transform .4s var(--muelle);
 }
-.pie__placa img{width:clamp(250px,36vw,500px)}
+.pie__placa img{width:clamp(250px,36vw,500px);mix-blend-mode:multiply}   /* el blanco del JPG se funde con la placa */
 .pie__destello{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit}
 .pie__destello::before{
   content:'';position:absolute;top:-20%;bottom:-20%;left:-35%;width:30%;
@@ -294,12 +296,12 @@ svg{flex:none}
 @media (hover:hover){.pie__placa:hover{transform:translateY(-5px) scale(1.025)}}
 .pie__placa:active{transform:scale(.985)}
 .pie__placa:focus-visible{outline-offset:6px;border-radius:20px}
-.pie__lema{max-width:40ch;font-size:clamp(16px,.4vw + 14.5px,18.5px);color:var(--hielo)}
+.pie__lema{max-width:40ch;text-wrap:balance;font-size:clamp(16px,.4vw + 14.5px,18.5px);color:var(--hielo)}
 .pie__red{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:var(--brillo);text-decoration:none;font-weight:600;transition:transform .22s var(--muelle)}
 .pie__red svg{width:22px;height:22px}
 @media (hover:hover){.pie__red:hover{transform:translateY(-2px)}}
 .pie__red:active{transform:scale(.97)}
-.fuera .pie__destello::before{animation-play-state:paused}
+.fuera .pie__destello::before{animation-play-state:paused!important}
 .quieto .pie__destello{display:none}
 .pie__env{display:grid;gap:36px;padding-top:clamp(44px,5vw,64px)}
 @media (min-width:760px){.pie__env{grid-template-columns:repeat(3,1fr)}}
