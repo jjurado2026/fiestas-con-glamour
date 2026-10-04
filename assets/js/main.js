@@ -485,7 +485,7 @@
 
   alEntrar(mesa, () => {
     mesa.classList.add('repartida');
-    if (obsSobres) invitaciones.forEach(inv => obsSobres.observe(inv));
+    if (obsSobres && mesa.scrollWidth <= mesa.clientWidth) invitaciones.forEach(inv => obsSobres.observe(inv));
     else invitaciones.forEach(abrirSobre);
     // Abiertos los sobres, fuera los retrasos para que todo responda al momento
     setTimeout(() => {
@@ -862,6 +862,11 @@
       setTimeout(() => el.classList.add('asentado'), quieto ? 0 : 1300);
     }, .25);
     const escenaT = $('.triptico__escena', triptico);
+    // En móvil es una fila deslizable: arranca centrada en la foto del medio
+    if (escenaT.scrollWidth > escenaT.clientWidth + 2) {
+      const centro = $('.triptico__foto--centro', escenaT);
+      escenaT.scrollLeft = centro.offsetLeft - (escenaT.clientWidth - centro.offsetWidth) / 2;
+    }
     if (raton && !quieto) {
       triptico.addEventListener('pointermove', e => {
         if (e.pointerType !== 'mouse') return;
@@ -898,7 +903,7 @@
     const encender = () => {
       rafCita = 0;
       const top = frase.getBoundingClientRect().top;
-      const ini = innerHeight * .9, fin = innerHeight * .45;
+      const ini = innerHeight * .95, fin = innerHeight * .68;
       const n = Math.round(Math.min(1, Math.max(0, (ini - top) / (ini - fin))) * palabras.length);
       palabras.forEach((s, i) => s.classList.toggle('encendida', i < n));
       cita.classList.toggle('firmada', n >= palabras.length);
