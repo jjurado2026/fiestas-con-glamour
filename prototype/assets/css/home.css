@@ -25,7 +25,7 @@
 }
 .escena__texto{display:flex;flex-direction:column;align-items:center;gap:clamp(6px,1.8vh,20px)}
 
-/* El rótulo: Limelight con el acabado plateado de su logo */
+/* El rótulo: Yeseva One con el acabado plateado de su logo */
 .rotulo{
   --h1:clamp(34px,min(8.2vw,10.4vh),104px);   /* 104px: cabe en una línea dentro de --env */
   font-family:var(--display);font-weight:400;font-size:var(--h1);line-height:1.04;letter-spacing:.01em;
@@ -112,7 +112,7 @@
 .tiovivo__paso svg{width:20px;height:20px}
 @media (hover:hover){.tiovivo__paso:hover{transform:scale(1.08)}}
 .tiovivo__paso:active{transform:scale(.92)}
-.tiovivo__actual{min-width:16ch;font-family:var(--display);font-size:clamp(14px,min(1.1vw,2.2vh) + 6px,21px);color:var(--brillo)}
+.tiovivo__actual{min-width:16ch;font-weight:600;font-size:clamp(15px,min(1vw,2vh) + 6px,19px);letter-spacing:.01em;color:var(--brillo)}
 
 /* ---------- Encendido (una vez): focos → rótulo letra a letra →
    el resto → el tiovivo sube y empieza a girar ---------- */
@@ -162,6 +162,7 @@
   .tiovivo__escena{--w:min(30vw,48vh)}
 }
 
+/* @bloque invitaciones */
 /* =====================================================================
    SUS TRES COLUMNAS · tres invitaciones
    ===================================================================== */
@@ -234,6 +235,72 @@
 }
 .invitacion.inclinada .invitacion__brillo{opacity:1}
 .invitacion.destacada .invitacion__cara--frente{box-shadow:0 0 0 3px var(--hielo),var(--sombra-3)}
+
+/* ---------- Llegan en sobre (una vez, cuando se ven) ----------
+   Salta el sello, se abre la solapa (forrada de plata), el sobre baja y
+   se desvanece mientras la invitación sale. Solo transform y opacity. */
+.sobre{position:absolute;inset:0;z-index:6;display:none;pointer-events:none;perspective:1100px;transition:opacity .55s linear calc(2.05s + var(--i) * .18s),transform .9s var(--ease) calc(1.85s + var(--i) * .18s)}
+.js .sobre{display:block}
+.sobre__cuerpo{
+  position:absolute;inset:0;border-radius:18px;
+  background:
+    linear-gradient(to top right,transparent calc(50% - 1px),rgba(87,119,125,.32) 50%,transparent calc(50% + 1px)) left bottom/50% 64% no-repeat,
+    linear-gradient(to top left,transparent calc(50% - 1px),rgba(87,119,125,.32) 50%,transparent calc(50% + 1px)) right bottom/50% 64% no-repeat,
+    linear-gradient(180deg,#FFFFFF 0%,#EEF5F6 100%);
+  box-shadow:var(--sombra-3),inset 0 0 0 1px rgba(194,220,224,.9),inset 0 0 0 7px #fff,inset 0 0 0 8px rgba(194,220,224,.55);
+}
+.sobre__solapa{position:absolute;left:0;right:0;top:0;height:42%;transform-origin:50% 0;transform-style:preserve-3d;transition:transform .75s var(--giro) calc(1.25s + var(--i) * .18s),opacity .3s linear calc(1.6s + var(--i) * .18s)}
+.sobre__solapa::before,.sobre__solapa::after{
+  content:'';position:absolute;inset:0;border-radius:18px 18px 0 0;clip-path:polygon(0 0,100% 0,50% 100%);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.sobre__solapa::before{background:linear-gradient(180deg,#FFFFFF 0%,#FFFFFF 40%,#DCE9EC 100%)}
+.sobre__solapa::after{background:var(--metal);transform:rotateX(180deg)}
+.sobre__sello{
+  position:absolute;left:50%;top:42%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#2E6273 0%,var(--noche) 72%);
+  box-shadow:0 0 0 2px rgba(194,220,224,.9),0 0 0 6px rgba(15,39,49,.12),0 8px 16px -6px rgba(15,39,49,.7);
+  transition:transform .4s var(--muelle) calc(.95s + var(--i) * .18s),opacity .25s linear calc(1.05s + var(--i) * .18s);
+}
+.sobre__sello::before{content:'';position:absolute;inset:15px;background:var(--metal);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.invitacion.abierta .sobre__sello{transform:scale(1.4);opacity:0}
+.invitacion.abierta .sobre__solapa{transform:rotateX(-172deg);opacity:0}
+.invitacion.abierta .sobre{opacity:0;transform:translateY(16%)}
+/* La invitación sale del sobre */
+.invitacion.abierta .invitacion__inclina{animation:saleDelSobre .95s var(--muelle) calc(1.85s + var(--i) * .18s) backwards}
+@keyframes saleDelSobre{from{transform:translateY(3%) scale(.9)}}
+
+/* ---------- Ya en la mesa: flotan, brillan y se asoman ---------- */
+.invitacion:nth-child(1){--rf:-.5deg}.invitacion:nth-child(2){--rf:.45deg}.invitacion:nth-child(3){--rf:-.35deg}
+.mesa.asentada .invitacion{animation:flotar 5.5s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -1.9s)}
+@keyframes flotar{from{transform:translateY(0) rotate(0deg)}to{transform:translateY(-9px) rotate(var(--rf))}}
+/* Un destello recorre la tarjeta de vez en cuando */
+.invitacion__destello{position:absolute;inset:0;z-index:3;border-radius:inherit;overflow:hidden;pointer-events:none}
+.invitacion__destello::before{
+  content:'';position:absolute;top:-10%;bottom:-10%;left:-55%;width:42%;opacity:0;
+  background:linear-gradient(100deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.7) 50%,rgba(255,255,255,0) 100%);
+  transform:skewX(-14deg);
+}
+.mesa.asentada .invitacion__destello::before{animation:destelloInv 8.5s cubic-bezier(.45,.05,.35,1) infinite;animation-delay:calc(1.4s + var(--i) * 1.2s)}
+@keyframes destelloInv{0%{opacity:1;transform:translateX(0) skewX(-14deg)}24%{opacity:1;transform:translateX(400%) skewX(-14deg)}25%,100%{opacity:0;transform:translateX(400%) skewX(-14deg)}}
+/* Se asoman girando un poco: invitan a darles la vuelta (hasta que se usa una) */
+.mesa.asentada:not(.usada) .invitacion:not(.vuelta) .invitacion__giro{animation:asomar 9s var(--ease) infinite;animation-delay:calc(2.2s + var(--i) * 3s)}
+@keyframes asomar{0%,82%,100%{transform:none}88%{transform:rotateY(-22deg)}93%{transform:rotateY(6deg)}97%{transform:rotateY(-2deg)}}
+@media (hover:hover){
+  .mesa:not(.usada) .invitacion:hover .invitacion__giro{animation-play-state:paused}
+  .invitacion:hover .invitacion__foto img{transform:scale(1.05)}
+}
+.invitacion__foto img{transition:transform .7s var(--ease)}
+/* El dorso entra por partes al darle la vuelta */
+.invitacion.vuelta .invitacion__cara--dorso > *{animation:entraDorso .55s var(--muelle) both}
+.invitacion.vuelta .invitacion__cara--dorso > :nth-child(1){animation-delay:.3s}
+.invitacion.vuelta .invitacion__cara--dorso > :nth-child(2){animation-delay:.37s}
+.invitacion.vuelta .invitacion__cara--dorso > :nth-child(3){animation-delay:.44s}
+.invitacion.vuelta .invitacion__cara--dorso > :nth-child(4){animation-delay:.51s}
+.invitacion.vuelta .invitacion__cara--dorso > :nth-child(5){animation-delay:.58s}
+@keyframes entraDorso{from{opacity:0;transform:translateY(12px)}}
+.fuera .invitacion,.fuera .invitacion__destello::before,.fuera .invitacion__giro{animation-play-state:paused}
+.quieto .sobre{display:none}
 @media (max-width:899px){
   .mesa{
     grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:min(80vw,360px);
@@ -245,6 +312,8 @@
   /* En la invitación estrecha, el dorso solo con lo esencial: accesos y presupuesto */
   .invitacion__cara--dorso p{display:none}
 }
+
+/* /@bloque invitaciones */
 
 /* =====================================================================
    ABANICO · siete varillas en abanico, cortadas en cuña hacia el eje
@@ -387,6 +456,7 @@ html:not(.js) .cat-panel__cerrar{display:none}
 .resultados__vacio{display:grid;justify-items:start;gap:18px;margin-top:10px}
 .resultados__vacio p{font-family:var(--display);font-size:clamp(20px,1vw + 15px,26px);line-height:1.3;color:var(--tinta);max-width:34ch}
 
+/* @bloque ideas */
 /* =====================================================================
    IDEAS · escenario a oscuras con un foco
    ===================================================================== */
@@ -396,16 +466,58 @@ html:not(.js) .cat-panel__cerrar{display:none}
     radial-gradient(80% 50% at 50% 0%,rgba(72,134,151,.35) 0%,transparent 70%),
     linear-gradient(180deg,#0F2731 0%,#0A1D25 100%);
 }
-/* Tira de película (sus banners de 860×150, enteros) */
-.pelicula{position:relative;padding:15px 0;border-radius:6px;background:#06141A;box-shadow:0 30px 60px -32px rgba(0,0,0,.75)}
-.pelicula::before,.pelicula::after{
-  content:'';position:absolute;left:10px;right:10px;height:7px;border-radius:2px;pointer-events:none;
-  background:repeating-linear-gradient(90deg,rgba(217,246,247,.72) 0 12px,transparent 12px 26px);
+/* ---------- Tríptico: sus tres fotos como los paneles de un escenario ----------
+   Cada foto entera, a su proporción. Al llegar se despliegan como un
+   biombo; luego flotan, siguen al cursor y la señalada da un paso al frente. */
+.triptico{position:relative;isolation:isolate;margin:0 auto clamp(44px,5.5vw,72px);max-width:1180px;padding:clamp(20px,3vw,40px) 0 clamp(36px,4vw,56px);perspective:1500px}
+.triptico .escena__focos{z-index:-1;inset:-8% -12%}
+.triptico__escena{
+  display:grid;grid-template-columns:1fr 1.22fr 1fr;align-items:center;gap:clamp(16px,2.4vw,34px);
+  transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .9s var(--ease);
 }
-.pelicula::before{top:4px}
-.pelicula::after{bottom:4px}
-.pelicula img{display:block;width:100%;height:auto}
-.pelicula--ideas{margin:0 auto clamp(36px,5vw,56px);max-width:1100px}
+.triptico__foto{
+  --giroP:calc(var(--p) * 16deg);--z:calc((1 - var(--p) * var(--p)) * 46px);
+  position:relative;margin:0;transform-style:preserve-3d;
+  transform:translateZ(var(--z)) rotateY(var(--giroP));
+  transition:transform .8s var(--muelle),opacity .45s linear;
+}
+.triptico__mueve{animation:flotarTri 6.5s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -2.2s)}
+@keyframes flotarTri{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+.triptico__btn{display:block;width:100%;padding:0;border:0;border-radius:16px;background:none;cursor:zoom-in}
+.triptico__btn img{
+  width:100%;border-radius:16px;
+  box-shadow:0 0 0 1px rgba(194,220,224,.6),0 0 46px rgba(194,220,224,.16),0 34px 60px -30px rgba(0,0,0,.9);
+  -webkit-box-reflect:below 8px linear-gradient(transparent 72%,rgba(255,255,255,.16));
+}
+.triptico__foto figcaption{
+  position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);white-space:nowrap;
+  font-weight:600;font-size:15px;color:var(--hielo);opacity:.8;transition:opacity .3s linear;
+}
+@media (hover:hover){
+  .triptico__escena:hover .triptico__foto:not(:hover){opacity:.5}
+  .triptico__foto:hover{transform:translateZ(90px) rotateY(0deg) scale(1.04)}
+  .triptico__foto:hover figcaption{opacity:1}
+}
+.triptico__btn:active img{transform:scale(.98)}
+/* Entrada: se despliegan como un biombo, del centro hacia fuera */
+.js .triptico:not(.visible) .triptico__foto{opacity:0;transform:translateZ(-120px) rotateY(calc(var(--p) * 75deg)) translateY(40px)}
+.triptico.visible .triptico__foto{transition-delay:calc((var(--p) * var(--p)) * .22s + .1s)}
+.triptico.asentado .triptico__foto{transition-delay:0s}
+.fuera .triptico__mueve{animation-play-state:paused}
+.quieto .triptico__foto{opacity:1!important}
+@media (max-width:759px){
+  /* En móvil, una fila deslizable sin giros: cada foto a buen tamaño */
+  .triptico{perspective:none;padding-bottom:20px}
+  .triptico__escena{
+    grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:78vw;transform:none;
+    overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+    margin-inline:calc(var(--margen) * -1);padding:10px var(--margen) 48px;
+  }
+  .triptico__escena::-webkit-scrollbar{display:none}
+  .triptico__foto,.js .triptico:not(.visible) .triptico__foto{transform:none;scroll-snap-align:center}
+  .triptico__btn img{-webkit-box-reflect:unset}
+  .triptico .escena__focos{display:none}
+}
 
 .ideas__grid{display:grid;grid-template-columns:minmax(260px,4fr) minmax(0,8fr);gap:clamp(28px,4vw,56px);align-items:start}
 .programa{position:sticky;top:calc(var(--cab-alto) + 28px)}
@@ -463,68 +575,165 @@ html:not(.js) .cat-panel__cerrar{display:none}
   .pared{padding:10px}
 }
 
+/* /@bloque ideas */
+
+/* @bloque promo */
 /* =====================================================================
-   SERVICIOS EN PROMOCIÓN · carretes de película
+   SERVICIOS EN PROMOCIÓN · cartelera de estreno
+   Tres carteles con marco de bombillas que se encienden en cadena (dos
+   capas que alternan opacidad); en la pantalla, las fotos originales de
+   cada banner pasan enteras, sin recorte (contain sobre fondo de sala).
    ===================================================================== */
 .promo{background:var(--nieve)}
-.carretes{display:grid;gap:clamp(24px,3vw,36px)}
-.carrete{
-  position:relative;display:grid;grid-template-columns:minmax(0,7fr) minmax(280px,4fr);gap:clamp(20px,3vw,36px);align-items:center;
-  padding:16px clamp(16px,2vw,24px) 16px 16px;border-radius:24px;background:#fff;box-shadow:var(--sombra-2-c);
-  transition:transform .9s var(--ease),opacity .5s linear;
+.cartelera{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(22px,2.6vw,38px);align-items:stretch;perspective:1400px;padding-top:14px}
+.cartel{
+  position:relative;isolation:isolate;display:flex;flex-direction:column;gap:20px;
+  padding:28px 24px 28px;border-radius:22px;text-align:center;color:var(--hielo);
+  background:radial-gradient(120% 70% at 50% 0%,#1E4E5E 0%,var(--noche) 55%,var(--noche-3) 100%);
+  box-shadow:0 0 0 1px rgba(194,220,224,.35),0 0 0 6px rgba(15,39,49,.07),var(--sombra-3);
+  transition:transform 1.1s var(--muelle),opacity .6s linear;
 }
-.carrete:nth-child(even){grid-template-columns:minmax(280px,4fr) minmax(0,7fr);padding:16px 16px 16px clamp(16px,2vw,24px)}
-.carrete:nth-child(even) .pelicula{order:2}
-.js .carretes:not(.visible) .carrete{opacity:0;transform:translateX(-50px)}
-.js .carretes:not(.visible) .carrete:nth-child(even){transform:translateX(50px)}
-.carretes.visible .carrete{transition-delay:calc(var(--i) * .12s)}
-.carrete .pelicula img{transition:transform .9s var(--ease)}
-@media (hover:hover){.carrete:hover .pelicula img{transform:scale(1.03)}}
-.carrete .pelicula{overflow:hidden}
-.carrete__info{display:grid;gap:12px;justify-items:start}
-.carrete__t{font-family:var(--display);font-size:clamp(22px,.8vw + 16px,29px);line-height:1.12}
-.carrete__t a{text-decoration:none}
-.carrete__acciones{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;margin-top:4px}
-.precio{display:flex;align-items:flex-end;gap:12px}
-.precio__n{font-family:var(--display);font-size:clamp(44px,2vw + 30px,58px);line-height:.9;color:var(--noche)}
-.precio__d{font-size:15px;line-height:1.4;color:var(--texto);max-width:20ch}
-.carrete--destacado{box-shadow:0 0 0 2px var(--hielo),var(--sombra-3)}
+.cartel--estreno{box-shadow:0 0 0 2px var(--hielo),0 0 56px rgba(140,169,174,.5),var(--sombra-3)}
+/* Bombillas: dos juegos intercalados que se alternan, así parecen correr */
+.cartel__bombillas{position:absolute;inset:8px;z-index:2;border-radius:16px;pointer-events:none;opacity:.25}
+.cartel__bombillas::before,.cartel__bombillas::after{
+  --b:radial-gradient(circle,#FFFFFF 0 1.6px,rgba(217,246,247,.95) 2.4px,rgba(194,220,224,.32) 3.8px,transparent 5px);
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:var(--b) 6px 0/24px 10px repeat-x,var(--b) 6px 100%/24px 10px repeat-x,var(--b) 0 6px/10px 24px repeat-y,var(--b) 100% 6px/10px 24px repeat-y;
+}
+.cartel__bombillas::after{background-position:18px 0,18px 100%,0 18px,100% 18px}
+.cartelera.encendida .cartel__bombillas{opacity:1;animation:enciendeBombillas .9s linear calc(var(--i) * .2s) backwards}
+.cartelera.encendida .cartel__bombillas::before{animation:parpadeo 1.2s steps(1,end) infinite}
+.cartelera.encendida .cartel__bombillas::after{animation:parpadeo 1.2s steps(1,end) -.6s infinite}
+@keyframes parpadeo{0%{opacity:1}50%{opacity:.18}}
+@keyframes enciendeBombillas{0%{opacity:.25}20%{opacity:1}35%{opacity:.3}55%{opacity:1}70%{opacity:.5}100%{opacity:1}}
+@media (hover:hover){.cartel:hover .cartel__bombillas::before,.cartel:hover .cartel__bombillas::after{animation-duration:.5s}}
+/* Luz que sigue al cursor */
+.cartel__luz{position:absolute;inset:0;z-index:0;border-radius:inherit;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .35s linear}
+.cartel__luz::before{content:'';position:absolute;left:-55%;top:-55%;width:110%;height:110%;background:radial-gradient(circle,rgba(194,220,224,.26) 0%,transparent 62%);transform:translate(var(--gx,50%),var(--gy,40%))}
+.cartel.iluminado .cartel__luz{opacity:1}
+@media (hover:hover){.cartel:hover{transform:translateY(-8px)}}
+/* Pantalla: las fotos pasan con un fundido y un leve acercamiento (de 0,94 a 1: nunca recorta) */
+.cartel__pantalla{position:relative;z-index:1}
+.pase{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:#06141A;box-shadow:inset 0 0 0 1px rgba(194,220,224,.22),0 20px 34px -20px rgba(0,0,0,.85)}
+.pase__foto{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transform:scale(.94);transition:opacity 1.1s linear,transform 5.5s cubic-bezier(.2,.6,.3,1)}
+.pase__foto.activa{opacity:1;transform:none}
+html:not(.js) .pase__foto:first-child,.quieto .pase__foto:first-child{opacity:1;transform:none}
+/* El sello cae de golpe y el cartel acusa el golpe */
 .sello{
-  position:absolute;top:-22px;left:24px;z-index:3;display:grid;place-items:center;width:104px;height:104px;border-radius:50%;
-  background:var(--metal);color:var(--noche);font-family:var(--display);font-size:14px;
-  box-shadow:inset 0 0 0 5px rgba(255,255,255,.55),inset 0 0 0 6px rgba(87,119,125,.45),0 12px 24px -12px rgba(15,39,49,.6);
+  position:absolute;top:-18px;right:-14px;z-index:3;display:grid;place-items:center;width:96px;height:96px;border-radius:50%;
+  background:var(--metal);color:var(--noche);font-weight:700;font-size:14.5px;letter-spacing:.02em;
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.6),inset 0 0 0 5px rgba(87,119,125,.5),0 14px 26px -12px rgba(0,0,0,.75);
   transform:rotate(-12deg);
 }
-/* El sello va sobre la tira, nunca sobre el título */
-.carrete:nth-child(even) .sello{left:auto;right:24px;transform:rotate(10deg)}
-.js .carretes:not(.visible) .sello{opacity:0;transform:scale(1.5) rotate(-30deg)}
-.carretes.visible .sello{transition:transform .65s var(--muelle) calc(var(--i) * .12s + .55s),opacity .15s linear calc(var(--i) * .12s + .55s)}
-@media (max-width:899px){
-  .carrete,.carrete:nth-child(even){grid-template-columns:none;padding:14px 14px 22px}
-  .carrete:nth-child(even) .pelicula{order:0}
-  /* La tira no cabe entera: se ve a buen tamaño y pasa despacio de un extremo al otro */
-  .carrete .pelicula{container-type:inline-size}
-  .carrete .pelicula img{width:auto;height:120px;max-width:none;animation:panear 16s ease-in-out infinite alternate}
-  .carrete:nth-child(even) .pelicula img{animation-delay:-8s}
-  .carrete:nth-child(even) .sello{left:24px;right:auto}
+.js .cartelera:not(.sellada) .sello{opacity:0;transform:scale(2.6) rotate(-40deg)}
+.cartelera.sellada .sello{transition:transform .45s cubic-bezier(.55,0,.8,.2) calc(var(--i) * .28s),opacity .15s linear calc(var(--i) * .28s)}
+.cartelera.sellada .cartel{animation:golpe .45s var(--ease) calc(.42s + var(--i) * .28s)}
+@keyframes golpe{0%{transform:none}30%{transform:translateY(4px) rotate(-.7deg)}65%{transform:translateY(-1px) rotate(.3deg)}100%{transform:none}}
+/* Entrada: los carteles giran como vallas, uno tras otro */
+.js .cartelera:not(.visible) .cartel{opacity:0;transform:rotateY(-64deg) translateX(-34px)}
+.cartelera.visible .cartel{transition-delay:calc(var(--i) * .16s)}
+.cartelera.asentada .cartel{transition-delay:0s}
+/* Texto del cartel */
+.cartel__info{position:relative;z-index:1;flex:1;display:grid;gap:12px;justify-items:center;align-content:start}
+.cartel__t{font-family:var(--display);font-size:clamp(23px,.7vw + 16px,28px);line-height:1.14;color:var(--brillo)!important;text-wrap:balance}
+.cartel__t a{text-decoration:none}
+.cartel__info > p{max-width:32ch;font-size:16px;line-height:1.55}
+.cartel__acciones{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px 18px;margin-top:auto;padding-top:8px}
+/* El precio del DJ, en una entrada troquelada */
+.entrada{
+  display:flex;align-items:center;gap:14px;padding:10px 20px 10px 22px;border-radius:10px;
+  background:var(--metal-boton);color:var(--noche);transform:rotate(-2deg);transition:transform .45s var(--muelle);
+  -webkit-mask:radial-gradient(circle 9px at 0 50%,transparent 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 50%,transparent 97%,#000) right/51% 100% no-repeat;
+          mask:radial-gradient(circle 9px at 0 50%,transparent 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 50%,transparent 97%,#000) right/51% 100% no-repeat;
 }
-@keyframes panear{to{transform:translateX(calc(-100% + 100cqw))}}
+.entrada__n{font-family:var(--display);font-size:clamp(32px,1.1vw + 22px,42px);line-height:1;white-space:nowrap;padding-right:14px;border-right:2px dashed rgba(15,39,49,.35)}
+.entrada__d{max-width:18ch;font-size:14px;font-weight:500;line-height:1.35;text-align:left}
+@media (hover:hover){.cartel:hover .entrada{transform:rotate(1.5deg) translateY(-3px) scale(1.04)}}
+.fuera .cartel__bombillas::before,.fuera .cartel__bombillas::after{animation-play-state:paused}
+.quieto .cartel__bombillas{opacity:1}
+@media (max-width:899px){
+  /* En móvil, una fila de carteles que se desliza */
+  .cartelera{
+    grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:min(84vw,380px);perspective:none;
+    overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+    margin-inline:calc(var(--margen) * -1);padding:24px var(--margen) 30px;
+  }
+  .cartelera::-webkit-scrollbar{display:none}
+  .cartel{scroll-snap-align:center}
+  .js .cartelera:not(.visible) .cartel{transform:translateY(40px)}
+  .sello{right:-6px;width:84px;height:84px;font-size:13.5px}
+}
 
+/* /@bloque promo */
+
+/* @bloque nosotros */
 /* =====================================================================
    QUIÉNES SOMOS
    ===================================================================== */
 .nosotros__env{display:grid;gap:clamp(40px,6vw,88px);align-items:center}
-@media (min-width:960px){.nosotros__env{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}}
-.nosotros__foto{position:relative;padding:14px 14px 16px;border-radius:16px;background:#fff;box-shadow:var(--sombra-3);transform:rotate(-2deg);max-width:560px}
-.nosotros__foto::before{content:'';position:absolute;inset:6px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--hielo);pointer-events:none}
-.nosotros__foto img{width:100%;border-radius:8px}
-.nosotros__foto figcaption{padding-top:10px;font-family:var(--display);font-size:17px;color:var(--sombra-2);text-align:center}
+@media (min-width:960px){.nosotros__env{grid-template-columns:minmax(0,6fr) minmax(0,5fr)}}
+
+/* ---------- El escenario: telón, bambalina y foco ---------- */
+.escenario{margin:0;width:100%;max-width:680px;justify-self:center}
+.escenario__boca{
+  position:relative;isolation:isolate;overflow:hidden;border-radius:20px;
+  padding:clamp(34px,4.4vw,52px) clamp(16px,2.4vw,28px) clamp(22px,3vw,34px);
+  background:radial-gradient(80% 60% at 50% 100%,rgba(72,134,151,.45) 0%,transparent 70%),linear-gradient(180deg,var(--noche-2) 0%,var(--noche) 55%,var(--noche-3) 100%);
+  box-shadow:0 0 0 1px rgba(194,220,224,.4),0 0 0 7px rgba(15,39,49,.07),var(--sombra-3);
+}
+/* Foco desde lo alto, por detrás de la foto (no tiñe la foto) */
+.escenario__luz{
+  position:absolute;left:50%;top:-6%;z-index:0;width:120%;height:118%;margin-left:-60%;pointer-events:none;
+  background:conic-gradient(from 180deg at 50% 0%,transparent 0deg 152deg,rgba(194,220,224,.10) 162deg,rgba(217,246,247,.26) 180deg,rgba(194,220,224,.10) 198deg,transparent 208deg 360deg);
+  opacity:0;transform:scaleY(.85);transform-origin:50% 0;transition:opacity 1.2s linear 1.3s,transform 1.6s var(--ease) 1.3s;
+}
+.nosotros.abierto .escenario__luz{opacity:1;transform:none;animation:respirarLuz 5s ease-in-out 3s infinite alternate}
+@keyframes respirarLuz{from{opacity:1}to{opacity:.6}}
+.escenario__foto{position:relative;z-index:1;border-radius:10px;box-shadow:0 0 0 1px rgba(194,220,224,.55),0 26px 50px -22px rgba(0,0,0,.85);transition:transform .7s var(--muelle)}
+.escenario__foto img{width:100%;border-radius:10px}
+@media (hover:hover){.escenario:hover .escenario__foto{transform:translateY(-4px) scale(1.03)}}
+/* Telón: pliegues azul noche con ribete de plata; se recoge hacia los lados */
+.telon{
+  position:absolute;top:0;bottom:0;z-index:3;width:50.5%;pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.07) 0%,transparent 35%,rgba(0,0,0,.28) 100%),
+    repeating-linear-gradient(90deg,#0A1D25 0px,#1D4B5B 14px,#2A6070 20px,#163847 30px,#0A1D25 44px);
+  transition:transform 1.7s cubic-bezier(.65,0,.2,1) .35s;
+}
+.telon::after{content:'';position:absolute;top:0;bottom:0;width:5px;background:var(--metal);box-shadow:0 0 14px rgba(194,220,224,.5)}
+.telon--izq{left:0;transform-origin:0 50%}
+.telon--izq::after{right:0}
+.telon--der{right:0;transform-origin:100% 50%}
+.telon--der::after{left:0}
+.nosotros.abierto .telon{transform:scaleX(.085)}
+/* Bambalina: la cenefa de arriba, fija */
+.escenario__bambalina{
+  position:absolute;left:0;right:0;top:0;z-index:4;height:clamp(22px,3vw,34px);pointer-events:none;
+  background:radial-gradient(circle at 50% 0,#1D4B5B 0 62%,transparent 64%) 0 0/46px 100% repeat-x,linear-gradient(180deg,#163847,#0F2731);
+  box-shadow:0 2px 0 rgba(194,220,224,.55),0 8px 16px -8px rgba(0,0,0,.6);
+}
+.escenario figcaption{padding-top:12px;font-weight:600;font-size:15px;color:var(--sombra-2);text-align:center}
+.js .nosotros:not(.abierto) .escenario__foto{transform:scale(.97)}
+.fuera .escenario__luz{animation-play-state:paused}
+.quieto .telon{transform:scaleX(.085)}
+.quieto .escenario__luz{opacity:1;transform:none}
+
 .nosotros__texto{display:grid;gap:22px;justify-items:start}
 .nosotros__texto > p{max-width:56ch;font-size:clamp(16.5px,.25vw + 15.5px,18px)}
 .cita{padding:24px 0 4px;border-top:1px solid var(--linea)}
-.cita p{font-family:var(--display);font-size:clamp(25px,1.6vw + 14px,38px);line-height:1.16;color:var(--tinta);text-wrap:balance}
-.cita footer{margin-top:12px;font-weight:600;color:var(--sombra-2)}
+.cita p{font-family:var(--display);font-size:clamp(25px,1.6vw + 14px,38px);line-height:1.18;color:var(--tinta);text-wrap:balance}
+/* La cita se enciende palabra a palabra al bajar (las palabras las separa el JS) */
+.cita__frase .palabra{opacity:.16;transition:opacity .45s linear}
+.cita__frase .palabra.encendida{opacity:1}
+.cita footer{margin-top:14px;font-weight:600;color:var(--sombra-2)}
+.cita__firma{position:relative;display:inline-block;padding-bottom:4px}
+.cita__firma::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:2px;background:var(--metal-boton);transform:scaleX(0);transform-origin:0 50%;transition:transform .9s var(--ease) .15s}
+.cita.firmada .cita__firma::after,.quieto .cita__firma::after,html:not(.js) .cita__firma::after{transform:none}
 
+/* /@bloque nosotros */
+
+/* @bloque contacto */
 /* =====================================================================
    CONTACTO · de noche
    ===================================================================== */
@@ -532,6 +741,46 @@ html:not(.js) .cat-panel__cerrar{display:none}
 .escena__focos--suave{opacity:.55}
 .contacto__env{position:relative;z-index:1;display:grid;gap:40px;align-items:start}
 @media (min-width:1000px){.contacto__env{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:64px}}
+/* El titular remarca «la fiesta de tus sueños»: más grande, en plata,
+   con un destello que la cruza, un trazo que se dibuja y chispas */
+.contacto__t{display:grid;gap:.12em}
+.contacto__pre{font-size:.62em;line-height:1.1;color:var(--hielo)}
+.suenos{
+  position:relative;display:block;width:fit-content;max-width:100%;
+  font-style:normal;font-size:1.34em;line-height:1.04;padding-bottom:.18em;
+  background:var(--metal);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(194,220,224,.28));
+}
+/* Destello: una ventana que avanza mientras su copia del texto retrocede
+   lo mismo, así la luz recorre las letras sin mover nada más (solo transform) */
+.suenos__brillo{
+  position:absolute;inset:0 0 .18em;overflow:hidden;pointer-events:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 42%,#000 58%,transparent 100%);
+          mask-image:linear-gradient(90deg,transparent 0,#000 42%,#000 58%,transparent 100%);
+  animation:ventana 6.5s cubic-bezier(.45,.05,.35,1) 1.2s infinite;
+}
+.suenos__brillo > span{
+  display:block;background:linear-gradient(180deg,#FFFFFF 0%,#F2FEFF 55%,#D9F6F7 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:contraventana 6.5s cubic-bezier(.45,.05,.35,1) 1.2s infinite;
+}
+@keyframes ventana{0%{transform:translateX(-105%)}38%,100%{transform:translateX(105%)}}
+@keyframes contraventana{0%{transform:translateX(105%)}38%,100%{transform:translateX(-105%)}}
+.suenos__trazo{
+  position:absolute;left:0;bottom:-.02em;width:100%;height:.3em;color:var(--hielo);opacity:.85;
+  transform:scaleX(0);transform-origin:0 50%;transition:transform 1.1s var(--ease) .35s;
+}
+.contacto.visible .suenos__trazo{transform:none}
+.suenos__chispa{position:absolute;width:.32em;height:.32em;pointer-events:none;opacity:0;animation:titilar 3.2s ease-in-out infinite}
+.suenos__chispa::before{content:'';position:absolute;inset:0;background:var(--brillo);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);filter:drop-shadow(0 0 6px rgba(217,246,247,.9))}
+.suenos__chispa:nth-of-type(1){top:-.18em;left:-.22em;animation-delay:.2s}
+.suenos__chispa:nth-of-type(2){top:.1em;right:-.36em;width:.24em;height:.24em;animation-delay:1.1s}
+.suenos__chispa:nth-of-type(3){bottom:.02em;left:38%;width:.2em;height:.2em;animation-delay:2s}
+.suenos__chispa:nth-of-type(4){top:-.3em;left:62%;width:.26em;height:.26em;animation-delay:2.7s}
+@keyframes titilar{0%,100%{opacity:0;transform:scale(.3) rotate(0deg)}45%{opacity:1;transform:scale(1) rotate(45deg)}70%{opacity:0;transform:scale(.4) rotate(90deg)}}
+.fuera .suenos__brillo,.fuera .suenos__brillo > span,.fuera .suenos__chispa{animation-play-state:paused}
+.quieto .suenos__brillo,.quieto .suenos__chispa{display:none}
+.quieto .suenos__trazo{transform:none}
 .contacto__entrada{margin-top:18px;font-size:clamp(17px,.4vw + 15.5px,20px);color:var(--hielo)}
 .datos{display:grid;gap:16px;margin-top:30px}
 .datos li{display:flex;align-items:flex-start;gap:14px;font-size:clamp(17px,.4vw + 15px,19px);font-weight:600;line-height:1.45;color:var(--brillo)}
@@ -568,3 +817,4 @@ html:not(.js) .cat-panel__cerrar{display:none}
 .formulario__ok{grid-column:1 / -1;padding:20px;border-radius:16px;background:var(--nieve)}
 .formulario__ok-t{font-family:var(--display);font-size:26px;color:var(--tinta);margin-bottom:6px}
 .formulario__ok.entra-ok{animation:panelEntra .32s var(--ease) both}
+/* /@bloque contacto */

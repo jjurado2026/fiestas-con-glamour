@@ -12,7 +12,7 @@
 <meta property="og:locale" content="es_ES">
 <meta property="og:title" content="Fiestas con Glamour — Experiencias únicas">
 <meta property="og:description" content="Fiestas privadas para particulares y eventos para empresas, en Madrid y a nivel nacional.">
-<link rel="preload" href="assets/fonts/limelight.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/yeseva-one.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/global.css">
 <link rel="stylesheet" href="assets/css/home.css">
@@ -169,6 +169,7 @@
   </div>
 </section>
 
+<!-- @bloque invitaciones -->
 <!-- =================================================================
      SUS TRES COLUMNAS · tres invitaciones con las fotos de su home.
      Se inclinan con el ratón y se dan la vuelta para ver qué incluyen.
@@ -182,6 +183,7 @@
 
     <div class="mesa">
       <article class="invitacion" data-publico="empresas" style="--i:0;--r0:-9deg">
+        <div class="sobre" aria-hidden="true"><span class="sobre__cuerpo"></span><span class="sobre__solapa"></span><span class="sobre__sello"></span></div>
         <div class="invitacion__inclina">
           <div class="invitacion__giro">
             <div class="invitacion__cara invitacion__cara--frente">
@@ -189,6 +191,7 @@
               <h3 class="invitacion__t">Eventos de empresa</h3>
               <span class="invitacion__adorno" aria-hidden="true"></span>
               <button class="invitacion__girar" type="button" aria-expanded="false"><svg aria-hidden="true"><use href="#i-girar"/></svg>Ver qué incluye</button>
+              <span class="invitacion__destello" aria-hidden="true"></span>
             </div>
             <div class="invitacion__cara invitacion__cara--dorso">
               <h3 class="invitacion__t">Eventos de empresa</h3>
@@ -208,6 +211,7 @@
       </article>
 
       <article class="invitacion" data-publico="infantiles" style="--i:1;--r0:4deg">
+        <div class="sobre" aria-hidden="true"><span class="sobre__cuerpo"></span><span class="sobre__solapa"></span><span class="sobre__sello"></span></div>
         <div class="invitacion__inclina">
           <div class="invitacion__giro">
             <div class="invitacion__cara invitacion__cara--frente">
@@ -215,6 +219,7 @@
               <h3 class="invitacion__t">Fiestas infantiles</h3>
               <span class="invitacion__adorno" aria-hidden="true"></span>
               <button class="invitacion__girar" type="button" aria-expanded="false"><svg aria-hidden="true"><use href="#i-girar"/></svg>Ver qué incluye</button>
+              <span class="invitacion__destello" aria-hidden="true"></span>
             </div>
             <div class="invitacion__cara invitacion__cara--dorso">
               <h3 class="invitacion__t">Fiestas infantiles</h3>
@@ -234,6 +239,7 @@
       </article>
 
       <article class="invitacion" data-publico="privadas" style="--i:2;--r0:10deg">
+        <div class="sobre" aria-hidden="true"><span class="sobre__cuerpo"></span><span class="sobre__solapa"></span><span class="sobre__sello"></span></div>
         <div class="invitacion__inclina">
           <div class="invitacion__giro">
             <div class="invitacion__cara invitacion__cara--frente">
@@ -241,6 +247,7 @@
               <h3 class="invitacion__t">Fiestas privadas</h3>
               <span class="invitacion__adorno" aria-hidden="true"></span>
               <button class="invitacion__girar" type="button" aria-expanded="false"><svg aria-hidden="true"><use href="#i-girar"/></svg>Ver qué incluye</button>
+              <span class="invitacion__destello" aria-hidden="true"></span>
             </div>
             <div class="invitacion__cara invitacion__cara--dorso">
               <h3 class="invitacion__t">Fiestas privadas</h3>
@@ -261,6 +268,7 @@
     </div>
   </div>
 </section>
+<!-- /@bloque invitaciones -->
 
 <!-- =================================================================
      ABANICO · un abanico de verdad con sus siete categorías, que se
@@ -495,6 +503,7 @@
   </div>
 </section>
 
+<!-- @bloque ideas -->
 <!-- =================================================================
      IDEAS ORIGINALES · un escenario a oscuras con un foco. La luz
      sigue al cursor; si nadie la mueve, recorre las 14 ideas sola.
@@ -506,7 +515,36 @@
       <h2 id="ideas-t" class="titulo titulo--metal">Haz que tus invitados se deslumbren con una bienvenida original</h2>
       <p class="cabecera__entrada">Elementos y animaciones para sorprender a tus asistentes con un toque de originalidad.</p>
     </header>
-    <div class="pelicula pelicula--ideas"><img src="assets/img/cinta-ideas.webp" alt="Photocall con croma, arco de globos y actores con bigotes y boas" width="1720" height="300" loading="lazy"></div>
+    <!-- Las tres fotos de su banner, enteras y a mayor resolución, en escena -->
+    <div class="triptico" role="group" aria-label="Tres ideas de su portada">
+      <div class="escena__focos escena__focos--suave" aria-hidden="true"><i class="foco foco--izq"></i><i class="foco foco--der"></i></div>
+      <div class="triptico__escena">
+        <figure class="triptico__foto" style="--p:-1;--i:0">
+          <div class="triptico__mueve">
+            <button type="button" class="triptico__btn" data-titulo="Photocall con croma" data-texto="Un photocall para fiestas o eventos es de lo más divertido que puedes contratar hoy en día." data-href="http://www.fiestasconglamour.com/servicios-bodas-eventos-fiestas-madrid/ideas-originales/" data-ver="Ver ideas originales">
+              <img src="assets/img/idea-croma.webp" alt="Montaje de un photocall con croma verde, foco con paraguas y técnico con portátil" width="800" height="500" loading="lazy">
+            </button>
+          </div>
+          <figcaption>Photocall con croma</figcaption>
+        </figure>
+        <figure class="triptico__foto triptico__foto--centro" style="--p:0;--i:1">
+          <div class="triptico__mueve">
+            <button type="button" class="triptico__btn" data-titulo="Decoración con globos" data-texto="Una decoración con globos es cada día más demandada por su belleza y estilo: hará que tu espacio aumente de glamour y vistosidad." data-href="http://www.fiestasconglamour.com/servicios-bodas-eventos-fiestas-madrid/decoracion/" data-ver="Ver decoración">
+              <img src="assets/img/idea-globos.webp" alt="Arco de globos rojos, negros y amarillos coronado por un Mickey de globos en un jardín" width="800" height="600" loading="lazy">
+            </button>
+          </div>
+          <figcaption>Decoración con globos</figcaption>
+        </figure>
+        <figure class="triptico__foto" style="--p:1;--i:2">
+          <div class="triptico__mueve">
+            <button type="button" class="triptico__btn" data-titulo="Photocall" data-texto="Te llevamos todo el atrezzo necesario para que puedas disfrazarte y hacerte fotos con tus invitados." data-href="http://www.fiestasconglamour.com/servicios-bodas-eventos-fiestas-madrid/ideas-originales/" data-ver="Ver ideas originales">
+              <img src="assets/img/idea-photocall.webp" alt="Invitados con bigotes, labios y boa de plumas posando en el photocall" width="800" height="500" loading="lazy">
+            </button>
+          </div>
+          <figcaption>Photocall con atrezo</figcaption>
+        </figure>
+      </div>
+    </div>
 
     <div class="ideas__grid">
       <div class="programa">
@@ -555,78 +593,117 @@
     </div>
   </div>
 </section>
+<!-- /@bloque ideas -->
 
+<!-- @bloque promo -->
 <!-- =================================================================
-     SERVICIOS EN PROMOCIÓN · sus tres banners de la home, enteros,
-     montados como tiras de película.
+     SERVICIOS EN PROMOCIÓN · una cartelera de estreno. Sus tres
+     promociones, como carteles con marco de bombillas; dentro, las
+     fotos originales de cada banner de su home pasan una a una.
      ================================================================= -->
 <section class="seccion promo" id="promocion" aria-labelledby="promo-t">
   <div class="env">
-    <header class="cabecera">
+    <header class="cabecera cabecera--centro">
       <h2 id="promo-t" class="titulo">Servicios en promoción</h2>
     </header>
-    <div class="carretes">
-      <article class="carrete" style="--i:0">
-        <div class="pelicula"><img src="assets/img/cinta-animaciones.webp" alt="Animadores con niños en fiestas infantiles: pintacaras, piratas y Minnie" width="1720" height="300" loading="lazy"></div>
-        <div class="carrete__info">
-          <h3 class="carrete__t"><a href="http://www.fiestasconglamour.com/celebraciones/fiestas-cumpleanos-infantiles-madrid/animaciones-y-actividades-fiestas-cumpleanos-infantiles/">Animaciones fiestas infantiles</a></h3>
+    <div class="cartelera">
+      <article class="cartel" style="--i:0">
+        <span class="cartel__bombillas" aria-hidden="true"></span>
+        <span class="cartel__luz" aria-hidden="true"></span>
+        <div class="cartel__pantalla">
+          <div class="pase" data-pase>
+            <img class="pase__foto" src="assets/img/promo-pintacaras.webp" alt="Animadora disfrazada de Minnie pintando la cara a un niño" width="800" height="600" loading="lazy">
+            <img class="pase__foto" src="assets/img/promo-animador.webp" alt="Animador con chistera y poncho jugando con niños" width="800" height="600" loading="lazy">
+            <img class="pase__foto" src="assets/img/promo-piratas.webp" alt="Fiesta pirata: un animador lee un mapa rodeado de niños con pañuelos verdes" width="800" height="600" loading="lazy">
+            <img class="pase__foto" src="assets/img/promo-minnie.webp" alt="Animadora de Minnie bailando con niños en un jardín" width="900" height="600" loading="lazy">
+          </div>
+          <span class="sello" aria-hidden="true">Promoción</span>
+        </div>
+        <div class="cartel__info">
+          <h3 class="cartel__t"><a href="http://www.fiestasconglamour.com/celebraciones/fiestas-cumpleanos-infantiles-madrid/animaciones-y-actividades-fiestas-cumpleanos-infantiles/">Animaciones fiestas infantiles</a></h3>
           <p>Nuestras animaciones y actividades están muy pensadas para los reyes de la casa.</p>
-          <div class="carrete__acciones">
-            <a class="boton boton--noche" href="#contacto" data-asunto="Cumpleaños infantil">Pide presupuesto</a>
-            <a class="enlace" href="http://www.fiestasconglamour.com/celebraciones/fiestas-cumpleanos-infantiles-madrid/animaciones-y-actividades-fiestas-cumpleanos-infantiles/">Ver animaciones</a>
+          <div class="cartel__acciones">
+            <a class="boton boton--hielo" href="#contacto" data-asunto="Cumpleaños infantil">Pide presupuesto</a>
+            <a class="enlace enlace--claro" href="http://www.fiestasconglamour.com/celebraciones/fiestas-cumpleanos-infantiles-madrid/animaciones-y-actividades-fiestas-cumpleanos-infantiles/">Ver animaciones</a>
           </div>
         </div>
-        <span class="sello" aria-hidden="true">Promoción</span>
       </article>
-      <article class="carrete carrete--destacado" style="--i:1">
-        <div class="pelicula"><img src="assets/img/cinta-djs.webp" alt="DJs pinchando en escenarios y fiestas privadas" width="1720" height="300" loading="lazy"></div>
-        <div class="carrete__info">
-          <h3 class="carrete__t"><a href="http://www.fiestasconglamour.com/agencias-organizacion-espectaculos-madrid/musica-bodas-fiestas-eventos-empresas/djs-de-musica/">DJs para bodas, fiestas y eventos</a></h3>
-          <p class="precio"><span class="precio__n">325 €</span><span class="precio__d">la sesión, hasta 4 horas, con el equipo de música</span></p>
-          <div class="carrete__acciones">
-            <a class="boton boton--noche" href="#contacto" data-asunto="Boda">Reserva tu DJ</a>
-            <a class="enlace" href="http://www.fiestasconglamour.com/agencias-organizacion-espectaculos-madrid/musica-bodas-fiestas-eventos-empresas/djs-de-musica/">Ver la oferta</a>
+      <article class="cartel cartel--estreno" style="--i:1">
+        <span class="cartel__bombillas" aria-hidden="true"></span>
+        <span class="cartel__luz" aria-hidden="true"></span>
+        <div class="cartel__pantalla">
+          <div class="pase" data-pase>
+            <img class="pase__foto" src="assets/img/promo-dj-escenario.webp" alt="Escenario con pantalla de luces y equipo de DJ" width="780" height="450" loading="lazy">
+            <img class="pase__foto" src="assets/img/promo-dj-mesa.webp" alt="DJ pinchando en la mesa de mezclas de un salón" width="921" height="450" loading="lazy">
+            <img class="pase__foto" src="assets/img/idea-dj.webp" alt="DJ con auriculares pinchando junto a los invitados de una fiesta privada" width="600" height="400" loading="lazy">
+          </div>
+          <span class="sello" aria-hidden="true">Promoción</span>
+        </div>
+        <div class="cartel__info">
+          <h3 class="cartel__t"><a href="http://www.fiestasconglamour.com/agencias-organizacion-espectaculos-madrid/musica-bodas-fiestas-eventos-empresas/djs-de-musica/">DJs para bodas, fiestas y eventos</a></h3>
+          <p class="entrada"><span class="entrada__n">325 €</span><span class="entrada__d">la sesión, hasta 4 horas, con el equipo de música</span></p>
+          <div class="cartel__acciones">
+            <a class="boton boton--hielo" href="#contacto" data-asunto="Boda">Reserva tu DJ</a>
+            <a class="enlace enlace--claro" href="http://www.fiestasconglamour.com/agencias-organizacion-espectaculos-madrid/musica-bodas-fiestas-eventos-empresas/djs-de-musica/">Ver la oferta</a>
           </div>
         </div>
-        <span class="sello" aria-hidden="true">Promoción</span>
       </article>
-      <article class="carrete" style="--i:2">
-        <div class="pelicula"><img src="assets/img/cinta-grupos.webp" alt="Mariachis, grupo de rock y tuna en fiestas y eventos" width="1720" height="300" loading="lazy"></div>
-        <div class="carrete__info">
-          <h3 class="carrete__t"><a href="http://www.fiestasconglamour.com/agencias-organizacion-espectaculos-madrid/musica-bodas-fiestas-eventos-empresas/">Grupos de música para fiestas y eventos</a></h3>
+      <article class="cartel" style="--i:2">
+        <span class="cartel__bombillas" aria-hidden="true"></span>
+        <span class="cartel__luz" aria-hidden="true"></span>
+        <div class="cartel__pantalla">
+          <div class="pase" data-pase>
+            <img class="pase__foto" src="assets/img/promo-mariachis.webp" alt="Cuatro mariachis con traje charro y sus instrumentos" width="800" height="520" loading="lazy">
+            <img class="pase__foto" src="assets/img/promo-rock.webp" alt="Grupo de rock tocando en directo en un local" width="800" height="482" loading="lazy">
+            <img class="pase__foto" src="assets/img/promo-tuna.webp" alt="Tunos con capa cantando y tocando en un restaurante" width="800" height="600" loading="lazy">
+          </div>
+          <span class="sello" aria-hidden="true">Promoción</span>
+        </div>
+        <div class="cartel__info">
+          <h3 class="cartel__t"><a href="http://www.fiestasconglamour.com/agencias-organizacion-espectaculos-madrid/musica-bodas-fiestas-eventos-empresas/">Grupos de música para fiestas y eventos</a></h3>
           <p>Pon una banda sonora para que tus invitados se diviertan al máximo.</p>
-          <div class="carrete__acciones">
-            <a class="boton boton--noche" href="#contacto" data-asunto="Evento de empresa">Pide presupuesto</a>
-            <a class="enlace" href="http://www.fiestasconglamour.com/agencias-organizacion-espectaculos-madrid/musica-bodas-fiestas-eventos-empresas/">Ver grupos</a>
+          <div class="cartel__acciones">
+            <a class="boton boton--hielo" href="#contacto" data-asunto="Evento de empresa">Pide presupuesto</a>
+            <a class="enlace enlace--claro" href="http://www.fiestasconglamour.com/agencias-organizacion-espectaculos-madrid/musica-bodas-fiestas-eventos-empresas/">Ver grupos</a>
           </div>
         </div>
-        <span class="sello" aria-hidden="true">Promoción</span>
       </article>
     </div>
   </div>
 </section>
+<!-- /@bloque promo -->
 
+<!-- @bloque nosotros -->
 <!-- =================================================================
      QUIÉNES SOMOS · su página /bienvenida/, en corto.
      ================================================================= -->
 <section class="seccion nosotros" id="nosotros" aria-labelledby="nos-t">
   <div class="env nosotros__env">
-    <figure class="nosotros__foto">
-      <img src="assets/img/equipo.webp" alt="El equipo de Fiestas con Glamour" width="800" height="500" loading="lazy">
+    <!-- El equipo, en escena: el telón se abre al llegar -->
+    <figure class="escenario">
+      <div class="escenario__boca">
+        <span class="escenario__luz" aria-hidden="true"></span>
+        <div class="escenario__foto"><img src="assets/img/equipo.webp" alt="El equipo de Fiestas con Glamour" width="800" height="500" loading="lazy"></div>
+        <span class="telon telon--izq" aria-hidden="true"></span>
+        <span class="telon telon--der" aria-hidden="true"></span>
+        <span class="escenario__bambalina" aria-hidden="true"></span>
+      </div>
       <figcaption>El equipo</figcaption>
     </figure>
     <div class="nosotros__texto">
       <h2 id="nos-t" class="titulo">Especialistas en crear y diseñar experiencias únicas</h2>
       <p>Fiestas con Glamour nació con la idea de aportar algo nuevo y divertido a los momentos memorables de la vida de las personas. Dedicación, exclusividad y pasión por descubrir nuevos horizontes son la clave de nuestro éxito.</p>
       <blockquote class="cita">
-        <p>Vive una experiencia diferente, vive una experiencia con glamour</p>
-        <footer>La Dirección</footer>
+        <p class="cita__frase">Vive una experiencia diferente, vive una experiencia con glamour</p>
+        <footer><span class="cita__firma">La Dirección</span></footer>
       </blockquote>
       <a class="boton boton--noche" href="#contacto">Habla con nosotros</a>
     </div>
   </div>
 </section>
+<!-- /@bloque nosotros -->
 
+<!-- @bloque contacto -->
 <!-- =================================================================
      CONTACTO · de noche, como el final de la fiesta.
      ================================================================= -->
@@ -634,7 +711,10 @@
   <div class="escena__focos escena__focos--suave" aria-hidden="true"><i class="foco foco--izq"></i><i class="foco foco--der"></i></div>
   <div class="env contacto__env">
     <div class="contacto__info">
-      <h2 id="con-t" class="titulo titulo--metal">Hagamos realidad la fiesta de tus sueños</h2>
+      <h2 id="con-t" class="titulo contacto__t">
+        <span class="contacto__pre">Hagamos realidad</span>
+        <em class="suenos">la fiesta de tus sueños<span class="suenos__brillo" aria-hidden="true"><span>la fiesta de tus sueños</span></span><svg class="suenos__trazo" viewBox="0 0 400 22" preserveAspectRatio="none" aria-hidden="true"><path d="M3 15C70 5 150 3 220 9s120 9 177-3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><i class="suenos__chispa" aria-hidden="true"></i><i class="suenos__chispa" aria-hidden="true"></i><i class="suenos__chispa" aria-hidden="true"></i><i class="suenos__chispa" aria-hidden="true"></i></em>
+      </h2>
       <p class="contacto__entrada">Ponte en contacto con nosotros y deja en nuestras manos tus ideas.</p>
       <ul class="datos">
         <li><svg aria-hidden="true"><use href="#i-tel"/></svg><a href="tel:+34914178838">91 417 88 38</a></li>
@@ -716,16 +796,23 @@
     </form>
   </div>
 </section>
+<!-- /@bloque contacto -->
 
 </main>
 
+<!-- @bloque pie -->
 <footer class="pie oscuro">
+  <!-- Su nombre, en grande: la placa con su logo bajo dos focos -->
+  <div class="pie__marquesina">
+    <div class="escena__focos escena__focos--suave" aria-hidden="true"><i class="foco foco--izq"></i><i class="foco foco--der"></i></div>
+    <a class="pie__placa" href="#inicio">
+      <img src="assets/img/logo-original.webp" alt="Fiestas con Glamour, volver al inicio" width="1342" height="236" loading="lazy">
+      <span class="pie__destello" aria-hidden="true"></span>
+    </a>
+    <p class="pie__lema">Organización de fiestas y eventos en Madrid y a nivel nacional.</p>
+    <a class="pie__red" href="https://www.facebook.com/fiestasconglamour" rel="noopener"><svg aria-hidden="true"><use href="#i-fb"/></svg>Facebook</a>
+  </div>
   <div class="env pie__env">
-    <div class="pie__marca">
-      <span class="pie__placa"><img src="assets/img/logo-original.webp" alt="Fiestas con Glamour" width="1342" height="236" loading="lazy"></span>
-      <p>Organización de fiestas y eventos en Madrid y a nivel nacional.</p>
-      <a class="pie__red" href="https://www.facebook.com/fiestasconglamour" rel="noopener"><svg aria-hidden="true"><use href="#i-fb"/></svg>Facebook</a>
-    </div>
     <nav class="pie__col" aria-label="Catálogo">
       <h2 class="pie__t">Organizamos</h2>
       <ul>
@@ -765,6 +852,7 @@
     </ul>
   </div>
 </footer>
+<!-- /@bloque pie -->
 
 <!-- Visor: la foto pulsada vuela desde donde estaba -->
 <div class="visor" id="visor" hidden role="dialog" aria-modal="true" aria-labelledby="visor-t">

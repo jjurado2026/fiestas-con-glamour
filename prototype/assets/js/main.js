@@ -1,14 +1,17 @@
 /* =====================================================================
-   FIESTAS CON GLAMOUR — v2 "Noche de estreno"
+   FIESTAS CON GLAMOUR — v3 "Noche de estreno"
    Todo el contenido se lee sin JavaScript: las 77 páginas de servicio
    están en el HTML (sin JS, las siete categorías se ven seguidas).
    Esto añade el movimiento y las piezas interactivas:
      · encendido del hero: focos, rótulo letra a letra y chispas
      · tiovivo con las siete fotos de su slider (gira, se arrastra)
      · visor: la foto pulsada vuela a primer plano con un flash
-     · invitaciones que se inclinan con el ratón y se dan la vuelta
+     · invitaciones que llegan en sobre, se inclinan y se dan la vuelta
      · abanico de categorías, cintas de servicios y buscador
+     · tríptico con las tres fotos de su banner de ideas
      · foco de las ideas: sigue al cursor o recorre las 14 ideas
+     · cartelera de promociones: bombillas, sello y pases de fotos
+     · telón del equipo y cita que se enciende al bajar
      · mega-menú y menú móvil, construidos desde el catálogo
      · cabecera compacta, presupuesto siempre a mano y formulario
 
@@ -62,7 +65,7 @@
     new IntersectionObserver(([e]) => fn(e.isIntersecting)).observe(el);
   };
   // Las secciones con movimiento propio lo paran fuera de pantalla
-  $$('.escena, .abanico').forEach(s => enPantalla(s, v => s.classList.toggle('fuera', !v)));
+  $$('.escena, .invitaciones, .abanico, .ideas, .promo, .nosotros, .contacto, .pie').forEach(s => enPantalla(s, v => s.classList.toggle('fuera', !v)));
 
   // Bloquea el scroll de la página (menú móvil, visor) sin que salte el ancho
   const bloquear = on => {
@@ -136,8 +139,8 @@
     const medir = () => {
       const ar = d.origen.naturalWidth / d.origen.naturalHeight || 1.6;
       const pad = Math.min(56, Math.max(14, innerWidth * .04)) * 2;
-      // Nunca más de 1,5 veces su tamaño real: sus originales son pequeños
-      const maxW = Math.min(1100, innerWidth - pad, (d.grande ? 1600 : d.origen.naturalWidth) * 1.5);
+      // Nunca por encima del tamaño real del archivo: ampliar más solo destaparía los límites del original
+      const maxW = Math.min(1100, innerWidth - pad, d.grande ? 1600 : d.origen.naturalWidth);
       const maxH = Math.min(760, innerHeight - pad - pie.offsetHeight - 20);
       let w = maxW, h = w / ar;
       if (h > maxH) { h = Math.max(120, maxH); w = h * ar; }
@@ -428,6 +431,7 @@
     return { ir, abrirFoto, reanudar: arrancar };
   })();
 
+  // @bloque invitaciones
   /* =====================================================================
      INVITACIONES · se reparten sobre la mesa al llegar, se inclinan
      con el ratón (con un brillo que sigue al cursor) y se dan la vuelta
@@ -449,7 +453,9 @@
   invitaciones.forEach(inv => {
     girar(inv, false);
     inv.addEventListener('click', e => {
-      if (e.target.closest('.invitacion__girar')) girar(inv, !inv.classList.contains('vuelta'), { foco: true });
+      if (!e.target.closest('.invitacion__girar')) return;
+      mesa.classList.add('usada');                       // ya no hace falta que se asomen
+      girar(inv, !inv.classList.contains('vuelta'), { foco: true });
     });
     if (!raton || quieto) return;
     const inclina = $('.invitacion__inclina', inv);
@@ -469,13 +475,23 @@
     });
   });
 
+  // Cada invitación llega en su sobre y se abre al verse (en móvil, al deslizarla)
+  const abrirSobre = inv => inv.classList.add('abierta');
+  const obsSobres = quieto || !io ? null : new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    abrirSobre(e.target);
+    obsSobres.unobserve(e.target);
+  }), { threshold: .55 });
+
   alEntrar(mesa, () => {
     mesa.classList.add('repartida');
-    // Terminado el reparto, fuera los retrasos para que todo responda al momento
+    if (obsSobres) invitaciones.forEach(inv => obsSobres.observe(inv));
+    else invitaciones.forEach(abrirSobre);
+    // Abiertos los sobres, fuera los retrasos para que todo responda al momento
     setTimeout(() => {
       mesa.classList.add('asentada');
       if (pendienteInv) { pendienteInv(); pendienteInv = null; }
-    }, quieto ? 0 : 1450);
+    }, quieto ? 0 : 3600);
   }, .2);
 
   // "Eventos de empresa", "Fiestas infantiles"…: lleva a su invitación y la abre
@@ -483,6 +499,12 @@
     const inv = $(`.invitacion[data-publico="${publico}"]`);
     if (!inv) return;
     const hacer = () => {
+      // Si su sobre seguía cerrado (móvil), se abre y se espera a que salga
+      if (!inv.classList.contains('abierta')) {
+        invitaciones.forEach(abrirSobre);
+        setTimeout(hacer, quieto ? 0 : 2900);
+        return;
+      }
       invitaciones.forEach(x => { if (x !== inv && x.classList.contains('vuelta')) girar(x, false); });
       // En móvil la mesa es una fila deslizable: centra la invitación
       if (mesa.scrollWidth > mesa.clientWidth) {
@@ -497,6 +519,8 @@
     else pendienteInv = hacer;
   };
   $$('[data-abre]').forEach(a => a.addEventListener('click', () => abrirInvitacion(a.dataset.abre)));
+
+  // /@bloque invitaciones
 
   /* =====================================================================
      ABANICO · siete varillas. Ninguna está marcada de inicio: el cursor
@@ -787,8 +811,113 @@
     return { irA, abrirIdea };
   })();
 
-  /* ---------- Promociones: las tiras entran y se estampa el sello ---------- */
-  alEntrar($('.carretes'), el => el.classList.add('visible'), .12);
+  // @bloque promo
+  /* =====================================================================
+     SERVICIOS EN PROMOCIÓN · cartelera de estreno: los carteles entran
+     girando, se encienden las bombillas, cae el sello y en cada pantalla
+     pasan las fotos de su banner, a destiempo unas de otras.
+     ===================================================================== */
+  const cartelera = $('.cartelera');
+  if (cartelera) {
+    alEntrar(cartelera, el => {
+      el.classList.add('visible');
+      setTimeout(() => el.classList.add('encendida', 'sellada'), quieto ? 0 : 950);
+      setTimeout(() => el.classList.add('asentada'), quieto ? 0 : 2300);
+    }, .15);
+    const pases = $$('[data-pase]', cartelera).map(p => ({ fotos: $$('.pase__foto', p), i: 0 }));
+    pases.forEach(x => x.fotos[0].classList.add('activa'));
+    let cartelVisible = false, turno = 0;
+    enPantalla(cartelera, v => { cartelVisible = v; });
+    if (!quieto) setInterval(() => {
+      if (!cartelVisible || document.hidden || visorAbierto) return;
+      const x = pases[turno++ % pases.length];
+      if (x.fotos.length < 2) return;
+      x.fotos[x.i].classList.remove('activa');
+      x.i = (x.i + 1) % x.fotos.length;
+      x.fotos[x.i].classList.add('activa');
+    }, 1500);
+    if (raton && !quieto) $$('.cartel', cartelera).forEach(c => {
+      const luz = $('.cartel__luz', c);
+      c.addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse') return;
+        const r = c.getBoundingClientRect();
+        luz.style.setProperty('--gx', `${Math.round(e.clientX - r.left)}px`);
+        luz.style.setProperty('--gy', `${Math.round(e.clientY - r.top)}px`);
+        c.classList.add('iluminado');
+      });
+      c.addEventListener('pointerleave', () => c.classList.remove('iluminado'));
+    });
+  }
+  // /@bloque promo
+
+  // @bloque ideas-tira
+  /* =====================================================================
+     IDEAS · las tres fotos de su portada, en escena. Se despliegan al
+     llegar, giran un poco siguiendo al cursor y se abren en el visor.
+     ===================================================================== */
+  const triptico = $('.triptico');
+  if (triptico) {
+    alEntrar(triptico, el => {
+      el.classList.add('visible');
+      setTimeout(() => el.classList.add('asentado'), quieto ? 0 : 1300);
+    }, .25);
+    const escenaT = $('.triptico__escena', triptico);
+    if (raton && !quieto) {
+      triptico.addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse') return;
+        const r = triptico.getBoundingClientRect();
+        escenaT.style.setProperty('--ry', `${(((e.clientX - r.left) / r.width - .5) * 8).toFixed(2)}deg`);
+        escenaT.style.setProperty('--rx', `${(-((e.clientY - r.top) / r.height - .5) * 5).toFixed(2)}deg`);
+      });
+      triptico.addEventListener('pointerleave', () => { escenaT.style.removeProperty('--ry'); escenaT.style.removeProperty('--rx'); });
+    }
+    $$('.triptico__btn', triptico).forEach(b => b.addEventListener('click', () => {
+      const img = $('img', b);
+      visor.abrir({
+        origen: img, oculta: b, boton: b, alt: img.alt,
+        titulo: b.dataset.titulo, texto: b.dataset.texto, asunto: 'Bienvenida original',
+        href: b.dataset.href, ver: b.dataset.ver
+      });
+    }));
+  }
+  // /@bloque ideas-tira
+
+  // @bloque nosotros
+  /* =====================================================================
+     QUIÉNES SOMOS · el telón se abre al llegar y descubre al equipo;
+     la cita se enciende palabra a palabra al bajar y se firma al final.
+     ===================================================================== */
+  const nosotros = $('.nosotros');
+  alEntrar($('.escenario'), () => nosotros.classList.add('abierto'), .35);
+  const frase = $('.cita__frase');
+  if (frase && !quieto) {
+    // Las palabras siguen siendo texto: los lectores de pantalla leen la frase igual
+    frase.innerHTML = frase.textContent.trim().split(/\s+/).map(p => `<span class="palabra">${esc(p)}</span>`).join(' ');
+    const palabras = $$('.palabra', frase), cita = frase.closest('.cita');
+    let rafCita = 0;
+    const encender = () => {
+      rafCita = 0;
+      const top = frase.getBoundingClientRect().top;
+      const ini = innerHeight * .9, fin = innerHeight * .45;
+      const n = Math.round(Math.min(1, Math.max(0, (ini - top) / (ini - fin))) * palabras.length);
+      palabras.forEach((s, i) => s.classList.toggle('encendida', i < n));
+      cita.classList.toggle('firmada', n >= palabras.length);
+    };
+    const alBajar = () => { if (!rafCita) rafCita = requestAnimationFrame(encender); };
+    enPantalla(frase, v => {
+      if (v) { addEventListener('scroll', alBajar, { passive: true }); encender(); }
+      else removeEventListener('scroll', alBajar);
+    });
+  } else if (frase) frase.closest('.cita').classList.add('firmada');
+  // /@bloque nosotros
+
+  // @bloque contacto
+  /* ---------- Contacto: el trazo bajo «la fiesta de tus sueños» se dibuja al llegar ---------- */
+  alEntrar($('.contacto'), el => el.classList.add('visible'), .25);
+  // /@bloque contacto
+
+  // @bloque pie
+  // /@bloque pie
 
   /* =====================================================================
      CABECERA · compacta al bajar. Mega-menú construido desde el
