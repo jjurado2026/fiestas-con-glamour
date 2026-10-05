@@ -13,6 +13,9 @@ Prototipo de homepage para **Fiestas con Glamour**, empresa de organización de 
 - Capturas sin animaciones: añadir `?ss` a la URL.
 - Estados para revisar: `&menu=celebraciones`, `&movil`, `&cat=infantiles`, `&q=payaso`, `&visor=3`, `&verIdea=6`, `&girar=empresas`, `&idea=5`.
 
+## Caducidad
+La propuesta se ve hasta el **15 de octubre de 2026** (hora de Madrid). Desde el 16, `index.html` lleva a `mantenimiento.html`: el aviso, el correo de contacto y la home entera en miniatura, que se recorre sola (y a mano al tocarla). La fecha está en la línea `Date.parse(...)` al principio de `index.html`. Abierto como archivo (`file://`) no caduca.
+
 ## Stack
 HTML, CSS y JavaScript puro. Cero dependencias, cero build. Fuentes autoalojadas (Yeseva One + Jost, 44 KB) e imágenes del cliente en WebP. Todo el catálogo está en el HTML: sin JS se ve completo. Respeta `prefers-reduced-motion`.
 
@@ -20,10 +23,11 @@ HTML, CSS y JavaScript puro. Cero dependencias, cero build. Fuentes autoalojadas
 ```
 prototype/          Prototipo navegable (se publica en gh-pages con git subtree)
   index.html
+  mantenimiento.html  Lo que se ve cuando la propuesta caduca
   assets/css/       global.css · home.css
   assets/js/        main.js
   assets/fonts/     yeseva-one · jost (woff2, latino)
-  assets/img/       fotos del cliente en WebP (ampliadas con IA) y su logo original
+  assets/img/       fotos del cliente en WebP (ampliadas con IA) y su logo original; home-miniatura.webp para el mantenimiento
 _interno/           Auditoría, competencia, brief, copy, plan, imágenes y propuesta (no se publica)
 ```
 

@@ -2,6 +2,18 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<script>
+/* Caducidad: la propuesta se ve hasta el 15-oct-2026 incluido (hora de Madrid);
+   desde el 16, mantenimiento.html. También al volver a una pestaña que se quedó
+   abierta. En local (file:) no caduca, para que sigan las capturas y el PDF. */
+(function (fin) {
+  if (location.protocol === 'file:') return;
+  function mirar() { if (Date.now() >= fin) location.replace('mantenimiento.html'); }
+  mirar();
+  addEventListener('pageshow', mirar);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) mirar(); });
+})(Date.parse('2026-10-16T00:00:00+02:00'));
+</script>
 <script>document.documentElement.classList.add('js')</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Organización de fiestas y eventos en Madrid | Fiestas con Glamour</title>
