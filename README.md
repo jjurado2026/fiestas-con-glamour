@@ -14,7 +14,7 @@ Prototipo de homepage para **Fiestas con Glamour**, empresa de organización de 
 - Estados para revisar: `&menu=celebraciones`, `&movil`, `&cat=infantiles`, `&q=payaso`, `&visor=3`, `&verIdea=6`, `&girar=empresas`, `&idea=5`.
 
 ## Caducidad
-La propuesta se ve hasta el **15 de octubre de 2026** (hora de Madrid). Desde el 16, `index.html` lleva a `mantenimiento.html`: el aviso, el correo de contacto y la home entera en miniatura, que se recorre sola (y a mano al tocarla). La fecha está en la línea `Date.parse(...)` al principio de `index.html`. Abierto como archivo (`file://`) no caduca.
+La propuesta se ve hasta el **14 de octubre de 2026** incluido (hora de Madrid): 10 días desde su envío, el 5 de octubre (el día de envío cuenta). Desde el 15, `index.html` lleva a `mantenimiento.html`: el aviso, el correo de contacto y la home entera en miniatura, que se recorre sola (y a mano al tocarla). La fecha está en la línea `Date.parse(...)` al principio de `index.html`. Abierto como archivo (`file://`) no caduca.
 
 ## Stack
 HTML, CSS y JavaScript puro. Cero dependencias, cero build. Fuentes autoalojadas (Yeseva One + Jost, 44 KB) e imágenes del cliente en WebP. Todo el catálogo está en el HTML: sin JS se ve completo. Respeta `prefers-reduced-motion`.
